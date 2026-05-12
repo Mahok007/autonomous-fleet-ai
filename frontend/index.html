@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Autonomous Fleet AI Platform</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+
+        *{
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+        }
+
+        header {
+            background: #1e293b;
+            padding: 20px;
+            text-align: center;
+            font-size: 30px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logout-btn {
+            float: right;
+            width: 120px;
+            background: #ef4444;
+            margin-top: -5px;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 40px;
+            color: #22c55e;
+            margin: 10px 0;
+        }
+
+        h2 {
+            color: #60a5fa;
+        }
+
+        h3 {
+            color: #93c5fd;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #2563eb;
+            transform: scale(1.02);
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .live-box {
+            margin-top: 20px;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            width: 100% !important;
+        }
+
+        .section {
+            padding: 20px;
+        }
+
+        #map {
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th {
+            background: #2563eb;
+            padding: 12px;
+        }
+
+        table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        table tr:nth-child(even) {
+            background: #334155;
+        }
+
+        .road {
+            position: relative;
+            height: 220px;
+            background: #111827;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .lane {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: white;
+        }
+
+        #fleetStatus {
+            font-size: 18px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        #aiResponse{
+            margin-top:20px;
+            padding:15px;
+            background:#0f172a;
+            border-radius:10px;
+            line-height:1.7;
+            color:#22c55e;
+            min-height:120px;
+            white-space: pre-line;
+        }
+
+        .status-online{
+            color:#22c55e;
+            font-weight:bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- AUTH CHECK -->
+<script>
+
+    let token = localStorage.getItem("token");
+
+    if (!token) {
+        window.location.href = "login.html";
+    }
+
+    function logout() {
+
+        localStorage.removeItem("token");
+
+        window.location.href = "login.html";
+    }
+
+</script>
+
+<!-- HEADER -->
+<header>
+
+    🚗 Autonomous Fleet AI Platform
+
+    <button class="logout-btn" onclick="logout()">
+        Logout
+    </button>
+
+</header>
+
+<!-- KPI DASHBOARD -->
+<div class="kpi-grid">
+
+    <div class="card">
+        <h2>Total Vehicles</h2>
+        <h1 id="totalVehicles">0</h1>
+    </div>
+
+    <div class="card">
+        <h2>Brake Decisions</h2>
+        <h1 id="brakeCount">0</h1>
+    </div>
+
+    <div class="card">
+        <h2>Accelerate Decisions</h2>
+        <h1 id="accelCount">0</h1>
+    </div>
+
+    <div class="card">
+        <h2>Average Speed</h2>
+        <h1 id="avgSpeed">0</h1>
+    </div>
+
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="card">
+
+        <h2>🤖 AI Model Control</h2>
+
+        <button onclick="trainModel()">
+            Train AI Model
+        </button>
+
+        <h2>📊 Prediction Panel</h2>
+
+        <input id="speed" placeholder="Enter Speed">
+
+        <input id="distance" placeholder="Enter Distance">
+
+        <input id="weather" placeholder="Weather (0 or 1)">
+
+        <button onclick="predict()">
+            Predict Decision
+        </button>
+
+        <div id="result"></div>
+
+        <!-- LIVE SENSOR -->
+        <div class="live-box">
+
+            <h3>📡 Live Simulation Data</h3>
+
+            <p>🚀 Speed:
+                <span id="liveSpeed">-</span>
+            </p>
+
+            <p>📏 Distance:
+                <span id="liveDistance">-</span>
+            </p>
+
+            <p>🌦 Weather:
+                <span id="liveWeather">-</span>
+            </p>
+
+            <p>
+                🟢 System:
+                <span class="status-online">
+                    ONLINE
+                </span>
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+
+        <h2>🧠 AI Decision Chart</h2>
+
+        <canvas id="chart"></canvas>
+
+        <h2>📈 Live Decision Trend</h2>
+
+        <canvas id="liveChart"></canvas>
+
+    </div>
+
+</div>
+
+<!-- ANALYTICS -->
+<div class="section">
+
+    <div class="container">
+
+        <div class="card">
+
+            <h2>📊 Fleet Analytics</h2>
+
+            <canvas id="analyticsChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h2>🧠 Decision Distribution</h2>
+
+            <canvas id="decisionChart"></canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MULTI CAR SIMULATION -->
+<div class="section">
+
+    <div class="card">
+
+        <h2>🚦 Autonomous Fleet Simulation</h2>
+
+        <!-- TRAFFIC LIGHT -->
+        <div style="
+            display:flex;
+            gap:10px;
+            margin-bottom:20px;
+            align-items:center;
+        ">
+
+            <div id="redLight"
+                 style="
+                 width:25px;
+                 height:25px;
+                 background:red;
+                 border-radius:50%;
+                 opacity:1;
+            "></div>
+
+            <div id="yellowLight"
+                 style="
+                 width:25px;
+                 height:25px;
+                 background:yellow;
+                 border-radius:50%;
+                 opacity:0.3;
+            "></div>
+
+            <div id="greenLight"
+                 style="
+                 width:25px;
+                 height:25px;
+                 background:lime;
+                 border-radius:50%;
+                 opacity:0.3;
+            "></div>
+
+        </div>
+
+        <!-- ROAD -->
+        <div class="road">
+
+            <!-- LANES -->
+            <div class="lane" style="top:70px;"></div>
+
+            <div class="lane" style="top:140px;"></div>
+
+            <!-- CAR 1 -->
+            <div id="car1" style="
+                width:70px;
+                height:40px;
+                background:#3b82f6;
+                position:absolute;
+                left:0;
+                top:20px;
+                border-radius:10px;
+                transition:0.5s;
+            "></div>
+
+            <!-- CAR 2 -->
+            <div id="car2" style="
+                width:70px;
+                height:40px;
+                background:#ef4444;
+                position:absolute;
+                left:120px;
+                top:90px;
+                border-radius:10px;
+                transition:0.5s;
+            "></div>
+
+            <!-- CAR 3 -->
+            <div id="car3" style="
+                width:70px;
+                height:40px;
+                background:#22c55e;
+                position:absolute;
+                left:240px;
+                top:160px;
+                border-radius:10px;
+                transition:0.5s;
+            "></div>
+
+        </div>
+
+        <div style="margin-top:20px;">
+
+            <h3>🤖 AI Fleet Status</h3>
+
+            <p id="fleetStatus">
+                Vehicles operating normally...
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MAP -->
+<div class="section">
+
+    <div class="card">
+
+        <h2>🗺 Live Vehicle Location</h2>
+
+        <div id="map"></div>
+
+    </div>
+
+</div>
+
+<!-- AI ASSISTANT -->
+<div class="section">
+
+    <div class="card">
+
+        <h2>🤖 Fleet AI Assistant</h2>
+
+        <input
+            id="aiQuestion"
+            placeholder="Ask AI something..."
+        >
+
+        <button onclick="askAI()">
+            Ask AI
+        </button>
+
+        <div id="aiResponse">
+
+            AI waiting for query...
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="section">
+
+    <div class="card">
+
+        <h2>🛠 Backend Data Control Panel</h2>
+
+        <input id="newSpeed" placeholder="Speed">
+
+        <input id="newDistance" placeholder="Distance">
+
+        <input id="newWeather" placeholder="Weather (0/1)">
+
+        <input id="newAction" placeholder="Action (0=Brake,1=Accelerate)">
+
+        <button onclick="addData()">
+            Add Data
+        </button>
+
+        <button onclick="loadData()">
+            Load Database Data
+        </button>
+
+        <input id="searchInput"
+               placeholder="Search by ID..."
+               onkeyup="searchTable()">
+
+        <table border="1">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Speed</th>
+                    <th>Distance</th>
+                    <th>Weather</th>
+                    <th>Action</th>
+                    <th>Delete</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="dataTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- SCRIPT -->
+<script src="script.js"></script>
+
+</body>
+</html>

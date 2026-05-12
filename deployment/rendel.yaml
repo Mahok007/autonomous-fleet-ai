@@ -1,0 +1,5 @@
+services:
+  - type: web
+    name: autonomous-fleet-backend
+    env: docker
+    plan: free
