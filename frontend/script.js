@@ -14,7 +14,9 @@ let accelData = [];
 function trainModel() {
 
     fetch("https://autonomous-fleet-ai-1.onrender.com/train")
+
     .then(res => res.json())
+
     .then(data => {
 
         alert(data.message);
@@ -211,7 +213,19 @@ function moveCars(accel) {
         car.style.left = position + "px";
     });
 
-    // TRAFFIC LIGHT
+    // TRAFFIC LIGHTS
+
+    let redLight =
+        document.getElementById("redLight");
+
+    let yellowLight =
+        document.getElementById("yellowLight");
+
+    let greenLight =
+        document.getElementById("greenLight");
+
+    let fleetStatus =
+        document.getElementById("fleetStatus");
 
     if (accel > 50) {
 
@@ -267,15 +281,17 @@ setInterval(() => {
 }, 3000);
 
 // =========================
-// MAP
+// LIVE MAP WITH USER LOCATION
 // =========================
 
 window.onload = function () {
 
-    // MAP
+    // DEFAULT INDIA LOCATION
 
     let map =
-        L.map("map").setView([18.5, 73.8], 13);
+        L.map("map").setView([20.5937, 78.9629], 5);
+
+    // MAP TILE
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -284,23 +300,66 @@ window.onload = function () {
         }
     ).addTo(map);
 
+    // MARKER
+
     let marker =
-        L.marker([18.5, 73.8]).addTo(map);
+        L.marker([20.5937, 78.9629]).addTo(map);
 
-    function updateMap() {
+    // USER LOCATION
 
-        let lat =
-            18.5 + (Math.random() - 0.5) * 0.01;
+    if (navigator.geolocation) {
 
-        let lng =
-            73.8 + (Math.random() - 0.5) * 0.01;
+        navigator.geolocation.getCurrentPosition(
 
-        marker.setLatLng([lat, lng]);
+            function(position) {
 
-        map.setView([lat, lng]);
+                let lat =
+                    position.coords.latitude;
+
+                let lng =
+                    position.coords.longitude;
+
+                map.setView([lat, lng], 15);
+
+                marker.setLatLng([lat, lng]);
+
+                marker.bindPopup(
+                    "🚗 Fleet Vehicle Live Location"
+                ).openPopup();
+
+                // LIVE MOVEMENT
+
+                function updateMap() {
+
+                    let newLat =
+                        lat + (Math.random() - 0.5) * 0.002;
+
+                    let newLng =
+                        lng + (Math.random() - 0.5) * 0.002;
+
+                    marker.setLatLng([newLat, newLng]);
+
+                    map.setView([newLat, newLng]);
+                }
+
+                setInterval(updateMap, 3000);
+
+            },
+
+            function(error) {
+
+                console.log(error);
+
+                alert("Location access denied.");
+
+            }
+
+        );
+
+    } else {
+
+        alert("Geolocation not supported.");
     }
-
-    setInterval(updateMap, 3000);
 
     // LOAD DATABASE
 
@@ -381,6 +440,7 @@ function loadData() {
         drawAnalytics(data);
 
         drawDecisionChart(brakeCount, accelCount);
+
     });
 }
 
@@ -545,6 +605,7 @@ function searchTable() {
             : "none";
     });
 }
+
 // =========================
 // GENERATIVE AI ASSISTANT
 // =========================
