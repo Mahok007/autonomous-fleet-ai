@@ -13,7 +13,7 @@ let accelData = [];
 
 function trainModel() {
 
-    fetch("http://127.0.0.1:8000/train")
+    fetch("https://autonomous-fleet-ai-1.onrender.com/train")
     .then(res => res.json())
     .then(data => {
 
@@ -38,7 +38,7 @@ function predict() {
         document.getElementById("weather").value;
 
     fetch(
-        `http://127.0.0.1:8000/predict?speed=${speed}&distance=${distance}&weather=${weather}`
+        `https://autonomous-fleet-ai-1.onrender.com/predict?speed=${speed}&distance=${distance}&weather=${weather}`
     )
 
     .then(res => res.json())
@@ -239,7 +239,7 @@ function moveCars(accel) {
 
 setInterval(() => {
 
-    fetch("http://127.0.0.1:8000/simulate")
+    fetch("https://autonomous-fleet-ai-1.onrender.com/simulate")
 
     .then(res => res.json())
 
@@ -313,7 +313,7 @@ window.onload = function () {
 
 function loadData() {
 
-    fetch("http://127.0.0.1:8000/data")
+    fetch("https://autonomous-fleet-ai-1.onrender.com/data")
 
     .then(res => res.json())
 
@@ -482,7 +482,7 @@ function addData() {
         document.getElementById("newAction").value;
 
     fetch(
-        `http://127.0.0.1:8000/add_data?speed=${speed}&distance=${distance}&weather=${weather}&action=${action}`,
+        `https://autonomous-fleet-ai-1.onrender.com/add_data?speed=${speed}&distance=${distance}&weather=${weather}&action=${action}`,
         {
             method: "POST"
         }
@@ -505,7 +505,7 @@ function addData() {
 function deleteData(id) {
 
     fetch(
-        `http://127.0.0.1:8000/delete/${id}`,
+        `https://autonomous-fleet-ai-1.onrender.com/delete/${id}`,
         {
             method: "DELETE"
         }
@@ -555,7 +555,7 @@ function askAI() {
         document.getElementById("aiQuestion").value;
 
     fetch(
-        `http://127.0.0.1:8000/ai_assistant?question=${question}`
+        `https://autonomous-fleet-ai-1.onrender.com/ai_assistant?question=${question}`
     )
 
     .then(res => res.json())
