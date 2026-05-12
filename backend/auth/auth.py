@@ -1,33 +1,32 @@
 from fastapi import APIRouter
-from jose import jwt
-from datetime import datetime, timedelta
+from pydantic import BaseModel
 
 router = APIRouter()
 
-SECRET_KEY = "autonomousfleetai"
+# =========================
+# LOGIN MODEL
+# =========================
 
-USERNAME = "admin"
-PASSWORD = "admin123"
+class LoginData(BaseModel):
+    username: str
+    password: str
 
-# 🚀 LOGIN API
+# =========================
+# LOGIN API
+# =========================
+
 @router.post("/login")
-def login(username: str, password: str):
+def login(data: LoginData):
 
-    if username != USERNAME or password != PASSWORD:
-        return {"error": "Invalid credentials"}
+    # DEMO LOGIN
 
-    expire = datetime.utcnow() + timedelta(hours=2)
+    if data.username == "admin" and data.password == "admin123":
 
-    token = jwt.encode(
-        {
-            "sub": username,
-            "exp": expire
-        },
-        SECRET_KEY,
-        algorithm="HS256"
-    )
+        return {
+            "access_token": "fleet_ai_token",
+            "token_type": "bearer"
+        }
 
     return {
-        "access_token": token,
-        "token_type": "bearer"
+        "error": "Invalid username or password"
     }

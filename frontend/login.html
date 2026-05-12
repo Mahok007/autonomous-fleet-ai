@@ -10,13 +10,21 @@
     <style>
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+
             margin: 0;
+            padding: 0;
+
+            font-family: 'Poppins', sans-serif;
+
+            background: #0f172a;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            height: 100vh;
         }
 
         .login-box {
@@ -31,12 +39,14 @@
 
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
 
-            color: white;
+            text-align: center;
         }
 
         h1 {
-            text-align: center;
-            color: #60a5fa;
+
+            color: #3b82f6;
+
+            margin-bottom: 30px;
         }
 
         input {
@@ -47,9 +57,15 @@
 
             margin-top: 15px;
 
+            border: none;
+
             border-radius: 8px;
 
-            border: none;
+            outline: none;
+
+            font-size: 15px;
+
+            box-sizing: border-box;
         }
 
         button {
@@ -60,27 +76,33 @@
 
             margin-top: 20px;
 
-            background: #3b82f6;
-
             border: none;
 
             border-radius: 8px;
+
+            background: #3b82f6;
 
             color: white;
 
             font-size: 16px;
 
             cursor: pointer;
+
+            transition: 0.3s;
         }
 
         button:hover {
+
             background: #2563eb;
         }
 
-        #error {
-            color: red;
-            margin-top: 15px;
-            text-align: center;
+        #message {
+
+            margin-top: 20px;
+
+            color: #22c55e;
+
+            font-weight: bold;
         }
 
     </style>
@@ -89,25 +111,35 @@
 
 <body>
 
-<div class="login-box">
+    <div class="login-box">
 
-    <h1>🚗 Fleet AI Login</h1>
+        <h1>🚗 Fleet AI Login</h1>
 
-    <input id="username" placeholder="Username">
+        <input
+            type="text"
+            id="username"
+            placeholder="Enter Username"
+        >
 
-    <input id="password"
-           type="password"
-           placeholder="Password">
+        <input
+            type="password"
+            id="password"
+            placeholder="Enter Password"
+        >
 
-    <button onclick="login()">
-        Login
-    </button>
+        <button onclick="login()">
+            Login
+        </button>
 
-    <div id="error"></div>
+        <div id="message"></div>
 
-</div>
+    </div>
 
 <script>
+
+// =========================
+// LOGIN FUNCTION
+// =========================
 
 function login() {
 
@@ -117,34 +149,69 @@ function login() {
     let password =
         document.getElementById("password").value;
 
-    fetch(`https://autonomous-fleet-ai-1.onrender.com/login?username=${username}&password=${password}`, {
+    fetch(
+        "https://autonomous-fleet-ai-1.onrender.com/login",
+        {
 
-        method: "POST"
+            method: "POST",
 
-    })
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                username: username,
+                password: password
+
+            })
+        }
+    )
 
     .then(res => res.json())
 
     .then(data => {
 
-        if (data.error) {
+        console.log(data);
 
-            document.getElementById("error").innerText =
-                data.error;
+        if (data.access_token) {
 
-            return;
+            localStorage.setItem(
+                "token",
+                data.access_token
+            );
+
+            document.getElementById("message")
+                .innerText = "Login Successful...";
+
+            setTimeout(() => {
+
+                window.location.href = "index.html";
+
+            }, 1000);
+
+        } else {
+
+            document.getElementById("message")
+                .style.color = "#ef4444";
+
+            document.getElementById("message")
+                .innerText = "Invalid Username or Password";
         }
-
-        // SAVE TOKEN
-        localStorage.setItem(
-            "token",
-            data.access_token
-        );
-
-        // REDIRECT
-        window.location.href = "index.html";
     });
 }
+
+// =========================
+// ENTER KEY LOGIN
+// =========================
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+        login();
+    }
+});
 
 </script>
 
