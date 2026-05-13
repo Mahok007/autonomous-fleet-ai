@@ -12,187 +12,178 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <!-- Leaflet Routing -->
     <link rel="stylesheet"
-    href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+          href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
     <style>
 
         *{
-            box-sizing: border-box;
+            box-sizing:border-box;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #0f172a;
-            color: white;
-            margin: 0;
+        body{
+            font-family:'Poppins',sans-serif;
+            background:#0f172a;
+            color:white;
+            margin:0;
         }
 
-        header {
-            background: #1e293b;
-            padding: 20px;
-            text-align: center;
-            font-size: 30px;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+        header{
+            background:#1e293b;
+            padding:20px;
+            text-align:center;
+            font-size:30px;
+            font-weight:bold;
+            position:sticky;
+            top:0;
+            z-index:1000;
+            box-shadow:0 0 15px rgba(0,0,0,0.5);
         }
 
-        .logout-btn {
-            float: right;
-            width: 120px;
-            background: #ef4444;
-            margin-top: -5px;
+        .logout-btn{
+            float:right;
+            width:120px;
+            background:#ef4444;
         }
 
-        .logout-btn:hover {
-            background: #dc2626;
+        .logout-btn:hover{
+            background:#dc2626;
         }
 
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            padding: 20px;
+        .container{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+            gap:20px;
+            padding:20px;
         }
 
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            padding: 20px;
+        .kpi-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            gap:20px;
+            padding:20px;
         }
 
-        .card {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        .card{
+            background:#1e293b;
+            padding:20px;
+            border-radius:15px;
+            box-shadow:0 0 15px rgba(0,0,0,0.5);
         }
 
-        h1 {
-            font-size: 40px;
-            color: #22c55e;
-            margin: 10px 0;
+        h1{
+            color:#22c55e;
+            font-size:40px;
         }
 
-        h2 {
-            color: #60a5fa;
+        h2{
+            color:#60a5fa;
         }
 
-        h3 {
-            color: #93c5fd;
+        h3{
+            color:#93c5fd;
         }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: none;
-            outline: none;
-            font-size: 15px;
+        input{
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            border:none;
+            border-radius:8px;
+            outline:none;
+            font-size:15px;
         }
 
-        button {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            font-size: 15px;
-            transition: 0.3s;
+        button{
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            border:none;
+            border-radius:8px;
+            background:#3b82f6;
+            color:white;
+            cursor:pointer;
+            font-size:15px;
+            transition:0.3s;
         }
 
-        button:hover {
-            background: #2563eb;
-            transform: scale(1.02);
+        button:hover{
+            transform:scale(1.02);
+            background:#2563eb;
         }
 
-        #result {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #22c55e;
+        .live-box{
+            margin-top:20px;
+            background:#0f172a;
+            padding:15px;
+            border-radius:10px;
         }
 
-        .live-box {
-            margin-top: 20px;
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 10px;
+        canvas{
+            background:white;
+            border-radius:10px;
+            padding:10px;
+            margin-top:15px;
+            width:100% !important;
         }
 
-        canvas {
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 15px;
-            width: 100% !important;
+        .section{
+            padding:20px;
         }
 
-        .section {
-            padding: 20px;
+        #map{
+            height:500px;
+            border-radius:12px;
+            overflow:hidden;
+            margin-top:20px;
         }
 
-        #map {
-            height: 500px;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 20px;
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        table th{
+            background:#2563eb;
+            padding:12px;
         }
 
-        table th {
-            background: #2563eb;
-            padding: 12px;
+        table td{
+            padding:10px;
+            text-align:center;
         }
 
-        table td {
-            padding: 10px;
-            text-align: center;
+        table tr:nth-child(even){
+            background:#334155;
         }
 
-        table tr:nth-child(even) {
-            background: #334155;
+        .road{
+            position:relative;
+            height:220px;
+            background:#111827;
+            border-radius:15px;
+            overflow:hidden;
         }
 
-        .road {
-            position: relative;
-            height: 220px;
-            background: #111827;
-            border-radius: 15px;
-            overflow: hidden;
+        .lane{
+            position:absolute;
+            width:100%;
+            height:4px;
+            background:white;
         }
 
-        .lane {
-            position: absolute;
-            width: 100%;
-            height: 4px;
-            background: white;
-        }
-
-        #fleetStatus {
-            font-size: 18px;
-            font-weight: bold;
-            color: #22c55e;
+        .status-online{
+            color:#22c55e;
+            font-weight:bold;
         }
 
         #aiResponse{
@@ -203,12 +194,7 @@
             line-height:1.7;
             color:#22c55e;
             min-height:120px;
-            white-space: pre-line;
-        }
-
-        .status-online{
-            color:#22c55e;
-            font-weight:bold;
+            white-space:pre-line;
         }
 
     </style>
@@ -223,6 +209,7 @@
     let token = localStorage.getItem("token");
 
     if (!token) {
+
         window.location.href = "login.html";
     }
 
@@ -240,38 +227,53 @@
 
     🚗 Autonomous Fleet AI Platform
 
-    <button class="logout-btn" onclick="logout()">
+    <button class="logout-btn"
+            onclick="logout()">
+
         Logout
+
     </button>
 
 </header>
 
-<!-- KPI DASHBOARD -->
+<!-- KPI -->
 <div class="kpi-grid">
 
     <div class="card">
+
         <h2>Total Vehicles</h2>
+
         <h1 id="totalVehicles">0</h1>
+
     </div>
 
     <div class="card">
+
         <h2>Brake Decisions</h2>
+
         <h1 id="brakeCount">0</h1>
+
     </div>
 
     <div class="card">
+
         <h2>Accelerate Decisions</h2>
+
         <h1 id="accelCount">0</h1>
+
     </div>
 
     <div class="card">
+
         <h2>Average Speed</h2>
+
         <h1 id="avgSpeed">0</h1>
+
     </div>
 
 </div>
 
-<!-- MAIN DASHBOARD -->
+<!-- MAIN -->
 <div class="container">
 
     <!-- LEFT -->
@@ -280,38 +282,57 @@
         <h2>🤖 AI Model Control</h2>
 
         <button onclick="trainModel()">
+
             Train AI Model
+
         </button>
 
         <h2>📊 Prediction Panel</h2>
 
-        <input id="speed" placeholder="Enter Speed">
+        <input id="speed"
+               placeholder="Enter Speed">
 
-        <input id="distance" placeholder="Enter Distance">
+        <input id="distance"
+               placeholder="Enter Distance">
 
-        <input id="weather" placeholder="Weather (0 or 1)">
+        <input id="weather"
+               placeholder="Weather (0 or 1)">
 
         <button onclick="predict()">
+
             Predict Decision
+
         </button>
 
-        <div id="result"></div>
+        <div id="result"
+             style="
+                margin-top:20px;
+                font-size:20px;
+                font-weight:bold;
+                color:#22c55e;
+             ">
 
-        <!-- LIVE SENSOR -->
+        </div>
+
+        <!-- LIVE DATA -->
         <div class="live-box">
 
             <h3>📡 Live Simulation Data</h3>
 
-            <p>🚀 Speed:
-                <span id="liveSpeed">-</span>
+            <p>
+                🚀 Speed:
+                <span id="liveSpeed">0</span>
+                km/h
             </p>
 
-            <p>📏 Distance:
-                <span id="liveDistance">-</span>
+            <p>
+                📏 Distance:
+                <span id="liveDistance">0</span>
             </p>
 
-            <p>🌦 Weather:
-                <span id="liveWeather">-</span>
+            <p>
+                🌦 Weather:
+                <span id="liveWeather">0</span>
             </p>
 
             <p>
@@ -365,93 +386,96 @@
 
 </div>
 
-<!-- MULTI CAR SIMULATION -->
+<!-- CAR SIMULATION -->
 <div class="section">
 
     <div class="card">
 
         <h2>🚦 Autonomous Fleet Simulation</h2>
 
-        <!-- TRAFFIC LIGHT -->
+        <!-- LIGHTS -->
         <div style="
             display:flex;
             gap:10px;
             margin-bottom:20px;
-            align-items:center;
         ">
 
             <div id="redLight"
                  style="
-                 width:25px;
-                 height:25px;
-                 background:red;
-                 border-radius:50%;
-                 opacity:1;
-            "></div>
+                    width:25px;
+                    height:25px;
+                    background:red;
+                    border-radius:50%;
+                    opacity:1;
+                 "></div>
 
             <div id="yellowLight"
                  style="
-                 width:25px;
-                 height:25px;
-                 background:yellow;
-                 border-radius:50%;
-                 opacity:0.3;
-            "></div>
+                    width:25px;
+                    height:25px;
+                    background:yellow;
+                    border-radius:50%;
+                    opacity:0.3;
+                 "></div>
 
             <div id="greenLight"
                  style="
-                 width:25px;
-                 height:25px;
-                 background:lime;
-                 border-radius:50%;
-                 opacity:0.3;
-            "></div>
+                    width:25px;
+                    height:25px;
+                    background:lime;
+                    border-radius:50%;
+                    opacity:0.3;
+                 "></div>
 
         </div>
 
         <!-- ROAD -->
         <div class="road">
 
-            <!-- LANES -->
-            <div class="lane" style="top:70px;"></div>
+            <div class="lane"
+                 style="top:70px;"></div>
 
-            <div class="lane" style="top:140px;"></div>
+            <div class="lane"
+                 style="top:140px;"></div>
 
             <!-- CAR 1 -->
-            <div id="car1" style="
-                width:70px;
-                height:40px;
-                background:#3b82f6;
-                position:absolute;
-                left:0;
-                top:20px;
-                border-radius:10px;
-                transition:0.5s;
-            "></div>
+            <div id="car1"
+                 style="
+                    width:70px;
+                    height:40px;
+                    background:#3b82f6;
+                    position:absolute;
+                    left:0;
+                    top:20px;
+                    border-radius:10px;
+                    transition:0.5s;
+                 "></div>
 
             <!-- CAR 2 -->
-            <div id="car2" style="
-                width:70px;
-                height:40px;
-                background:#ef4444;
-                position:absolute;
-                left:120px;
-                top:90px;
-                border-radius:10px;
-                transition:0.5s;
-            "></div>
+            <div id="car2"
+                 style="
+                    width:70px;
+                    height:40px;
+                    background:#ef4444;
+                    position:absolute;
+                    left:120px;
+                    top:90px;
+                    border-radius:10px;
+                    transition:0.5s;
+                 "></div>
 
             <!-- CAR 3 -->
-            <div id="car3" style="
-                width:70px;
-                height:40px;
-                background:#22c55e;
-                position:absolute;
-                left:240px;
-                top:160px;
-                border-radius:10px;
-                transition:0.5s;
-            "></div>
+            <div id="car3"
+                 style="
+                    width:70px;
+                    height:40px;
+                    background:#22c55e;
+                    position:absolute;
+                    left:240px;
+                    top:160px;
+                    border-radius:10px;
+                    transition:0.5s;
+                 "></div>
 
         </div>
 
@@ -460,7 +484,9 @@
             <h3>🤖 AI Fleet Status</h3>
 
             <p id="fleetStatus">
+
                 Vehicles operating normally...
+
             </p>
 
         </div>
@@ -469,25 +495,90 @@
 
 </div>
 
-<!-- SMART ROUTE MAP -->
+<!-- SMART MAP -->
 <div class="section">
 
     <div class="card">
 
         <h2>🗺 Smart Route Navigation</h2>
 
-        <input
-            id="startLocation"
-            placeholder="Enter Start Location">
+        <input id="startLocation"
+               placeholder="Enter Start Location">
 
-        <input
-            id="endLocation"
-            placeholder="Enter Destination">
+        <input id="endLocation"
+               placeholder="Enter Destination">
 
+        <!-- FIND ROUTE -->
         <button onclick="findRoute()">
+
             Find Shortest Route
+
         </button>
 
+        <!-- START TRIP -->
+        <button onclick="startRealTracking()"
+                style="background:#22c55e;">
+
+            ▶ Start Trip
+
+        </button>
+
+        <!-- END TRIP -->
+        <button onclick="stopTrip()"
+                style="background:#ef4444;">
+
+            ⏹ End Trip
+
+        </button>
+
+        <!-- DOWNLOAD REPORT -->
+        <button onclick="downloadTripReport()"
+                style="background:#8b5cf6;">
+
+            📄 Download Trip Report
+
+        </button>
+
+        <!-- STATUS -->
+        <div style="
+            margin-top:20px;
+            background:#0f172a;
+            padding:15px;
+            border-radius:10px;
+        ">
+
+            <h3>🚘 Live Trip Status</h3>
+
+            <p>
+                Trip Status:
+                <span id="tripStatus"
+                      style="
+                        color:#ef4444;
+                        font-weight:bold;
+                      ">
+                    NOT STARTED
+                </span>
+            </p>
+
+            <p>
+                Current Speed:
+                <span id="currentSpeed">0</span>
+                km/h
+            </p>
+
+            <p>
+                Total Brake Events:
+                <span id="totalBrake">0</span>
+            </p>
+
+            <p>
+                Total Acceleration Events:
+                <span id="totalAccel">0</span>
+            </p>
+
+        </div>
+
+        <!-- MAP -->
         <div id="map"></div>
 
     </div>
@@ -501,13 +592,13 @@
 
         <h2>🤖 Fleet AI Assistant</h2>
 
-        <input
-            id="aiQuestion"
-            placeholder="Ask AI something..."
-        >
+        <input id="aiQuestion"
+               placeholder="Ask AI something...">
 
         <button onclick="askAI()">
+
             Ask AI
+
         </button>
 
         <div id="aiResponse">
@@ -520,27 +611,35 @@
 
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- ADMIN -->
 <div class="section">
 
     <div class="card">
 
         <h2>🛠 Backend Data Control Panel</h2>
 
-        <input id="newSpeed" placeholder="Speed">
+        <input id="newSpeed"
+               placeholder="Speed">
 
-        <input id="newDistance" placeholder="Distance">
+        <input id="newDistance"
+               placeholder="Distance">
 
-        <input id="newWeather" placeholder="Weather (0/1)">
+        <input id="newWeather"
+               placeholder="Weather (0/1)">
 
-        <input id="newAction" placeholder="Action (0=Brake,1=Accelerate)">
+        <input id="newAction"
+               placeholder="Action (0=Brake,1=Accelerate)">
 
         <button onclick="addData()">
+
             Add Data
+
         </button>
 
         <button onclick="loadData()">
+
             Load Database Data
+
         </button>
 
         <input id="searchInput"
@@ -552,12 +651,14 @@
             <thead>
 
                 <tr>
+
                     <th>ID</th>
                     <th>Speed</th>
                     <th>Distance</th>
                     <th>Weather</th>
                     <th>Action</th>
                     <th>Delete</th>
+
                 </tr>
 
             </thead>

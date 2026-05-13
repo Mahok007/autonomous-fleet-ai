@@ -61,3 +61,16 @@ def root():
     return {
         "message": "🚗 Autonomous Fleet AI Platform Running Successfully"
     }
+
+from fastapi import Body
+
+trip_history = []
+
+@app.post("/save_trip")
+def save_trip(data: dict = Body(...)):
+
+    trip_history.append(data)
+
+    return {
+        "message": "Trip Saved Successfully"
+    }

@@ -17,7 +17,9 @@ let tripData = [];
 let watchId = null;
 let tripStarted = false;
 
-// REAL CALCULATION VARIABLES
+// =========================
+// REAL TRACKING VARIABLES
+// =========================
 
 let previousLat = null;
 let previousLng = null;
@@ -170,6 +172,13 @@ function updateLiveChart(brake, accel) {
                         fill: false
                     }
                 ]
+            },
+
+            options: {
+
+                responsive: true,
+
+                animation: false
             }
         });
     }
@@ -276,10 +285,25 @@ window.onload = function () {
         }
     ).addTo(map);
 
-    vehicleMarker =
-        L.marker([20.5937, 78.9629]).addTo(map);
+    // CUSTOM BLUE MARKER
 
-    // CURRENT LOCATION ONLY ONCE
+    let blueIcon = L.icon({
+
+        iconUrl:
+            "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+
+        iconSize: [35, 35],
+
+        iconAnchor: [17, 35]
+    });
+
+    vehicleMarker =
+        L.marker(
+            [20.5937, 78.9629],
+            { icon: blueIcon }
+        ).addTo(map);
+
+    // GET CURRENT LOCATION ONCE
 
     if (navigator.geolocation) {
 
@@ -364,7 +388,7 @@ async function findRoute() {
 
     }
 
-    // MANUAL LOCATION
+    // MANUAL START LOCATION
 
     else {
 
@@ -382,7 +406,7 @@ async function findRoute() {
             parseFloat(startData[0].lon);
     }
 
-    // DESTINATION
+    // DESTINATION LOCATION
 
     let endRes = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
@@ -430,8 +454,6 @@ async function findRoute() {
     }).addTo(map);
 
     map.setView([startLat, startLng], 7);
-
-    startRealTracking();
 }
 
 // =========================
@@ -454,6 +476,14 @@ function startRealTracking() {
     previousTime = null;
     previousSpeed = 0;
 
+    document.getElementById(
+        "tripStatus"
+    ).innerText = "TRIP STARTED";
+
+    document.getElementById(
+        "tripStatus"
+    ).style.color = "#22c55e";
+
     watchId = navigator.geolocation.watchPosition(
 
         function(position) {
@@ -467,12 +497,14 @@ function startRealTracking() {
             let currentTime =
                 new Date().getTime();
 
+            // MOVE MARKER
+
             vehicleMarker.setLatLng([lat, lng]);
 
             map.setView([lat, lng], 15);
 
             // =========================
-            // REAL SPEED
+            // REAL SPEED CALCULATION
             // =========================
 
             let speed = 0;
@@ -482,7 +514,7 @@ function startRealTracking() {
                 previousLng !== null
             ) {
 
-                let distance =
+                let distanceTravelled =
                     getDistanceFromLatLonInKm(
                         previousLat,
                         previousLng,
@@ -493,15 +525,25 @@ function startRealTracking() {
                 let timeDiff =
                     (currentTime - previousTime) / 1000;
 
-                speed =
-                    (distance / timeDiff) * 3600;
+                if (timeDiff > 0) {
 
-                speed =
-                    Math.round(speed);
+                    speed =
+                        (distanceTravelled / timeDiff) * 3600;
+
+                    speed =
+                        Math.round(speed);
+                }
+            }
+
+            // LIMIT MAX SPEED
+
+            if (speed > 180) {
+
+                speed = 180;
             }
 
             // =========================
-            // REAL BRAKE & ACCELERATION
+            // ACCELERATION & BRAKING
             // =========================
 
             let accel = 0;
@@ -525,7 +567,7 @@ function startRealTracking() {
                 brake = 100;
 
             // =========================
-            // RANDOM SENSOR VALUES
+            // SENSOR VALUES
             // =========================
 
             let distance =
@@ -540,15 +582,18 @@ function startRealTracking() {
 
             document.getElementById(
                 "liveSpeed"
-            ).innerText = speed;
+            ).innerText =
+                speed + " km/h";
 
             document.getElementById(
                 "liveDistance"
-            ).innerText = distance;
+            ).innerText =
+                distance + " m";
 
             document.getElementById(
                 "liveWeather"
-            ).innerText = weather;
+            ).innerText =
+                weather;
 
             // =========================
             // UPDATE CHARTS
@@ -566,11 +611,12 @@ function startRealTracking() {
 
             tripData.push({
 
+                latitude: lat,
+                longitude: lng,
                 speed: speed,
                 brake: brake,
                 accel: accel,
-                latitude: lat,
-                longitude: lng,
+                weather: weather,
                 time: new Date().toLocaleTimeString()
 
             });
@@ -605,6 +651,20 @@ function startRealTracking() {
 
 function stopTrip() {
 
+    console.log(tripData);
+
+    // SAVE LOCAL STORAGE
+
+    localStorage.setItem(
+
+        "tripHistory",
+
+        JSON.stringify(tripData)
+
+    );
+
+    // STOP TRACKING
+
     if (watchId !== null) {
 
         navigator.geolocation.clearWatch(watchId);
@@ -614,7 +674,120 @@ function stopTrip() {
 
     tripStarted = false;
 
-    alert("Trip Ended Successfully");
+    // UPDATE STATUS
+
+    document.getElementById(
+        "tripStatus"
+    ).innerText = "TRIP ENDED";
+
+    document.getElementById(
+        "tripStatus"
+    ).style.color = "#ef4444";
+
+    // SAVE TO BACKEND
+
+    fetch(
+
+        "https://autonomous-fleet-ai-1.onrender.com/save_trip",
+
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                trip: tripData
+
+            })
+
+        }
+
+    )
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        console.log(data);
+
+        alert("Trip Saved Successfully");
+
+    })
+
+    .catch(error => {
+
+        console.log(error);
+
+        alert("Error Saving Trip");
+
+    });
+
+}
+
+// =========================
+// DOWNLOAD TRIP REPORT
+// =========================
+
+function downloadTripReport() {
+
+    let report = `
+
+AI Fleet Trip Report
+
+========================
+
+Total Points:
+${tripData.length}
+
+========================
+
+`;
+
+    tripData.forEach((item, index) => {
+
+        report += `
+
+Point ${index + 1}
+
+Time: ${item.time}
+
+Speed: ${item.speed} km/h
+
+Brake: ${item.brake}
+
+Acceleration: ${item.accel}
+
+Weather: ${item.weather}
+
+Latitude: ${item.latitude}
+
+Longitude: ${item.longitude}
+
+========================
+`;
+
+    });
+
+    const blob = new Blob(
+        [report],
+        { type: "text/plain" }
+    );
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        URL.createObjectURL(blob);
+
+    link.download =
+        "trip_report.txt";
+
+    link.click();
 }
 
 // =========================
