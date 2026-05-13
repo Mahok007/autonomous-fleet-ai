@@ -14,6 +14,9 @@ let vehicleMarker;
 let tripInterval = null;
 let tripData = [];
 
+let watchId = null;
+let tripStarted = false;
+
 // =========================
 // TRAIN MODEL
 // =========================
@@ -173,7 +176,7 @@ function updateLiveChart(brake, accel) {
 
     accelData.push(accel);
 
-    if (labels.length > 10) {
+    if (labels.length > 15) {
 
         labels.shift();
         brakeData.shift();
@@ -256,12 +259,8 @@ function moveCars(accel) {
 
 window.onload = function () {
 
-    // CREATE MAP
-
     map =
         L.map("map").setView([20.5937, 78.9629], 5);
-
-    // MAP LAYER
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -270,18 +269,14 @@ window.onload = function () {
         }
     ).addTo(map);
 
-    // VEHICLE MARKER
-
     vehicleMarker =
         L.marker([20.5937, 78.9629]).addTo(map);
 
-    // =========================
-    // LIVE GPS TRACKING
-    // =========================
+    // ONLY SET CURRENT LOCATION ONCE
 
     if (navigator.geolocation) {
 
-        navigator.geolocation.watchPosition(
+        navigator.geolocation.getCurrentPosition(
 
             function(position) {
 
@@ -291,29 +286,9 @@ window.onload = function () {
                 let lng =
                     position.coords.longitude;
 
-                // MOVE VEHICLE MARKER
+                map.setView([lat, lng], 13);
 
                 vehicleMarker.setLatLng([lat, lng]);
-
-                // CENTER MAP
-
-                map.setView([lat, lng], 15);
-
-                // SPEED
-
-                let speed =
-                    position.coords.speed;
-
-                if (!speed || speed < 0) {
-
-                    speed =
-                        Math.floor(Math.random() * 80);
-                }
-
-                document.getElementById(
-                    "liveSpeed"
-                ).innerText =
-                    Math.round(speed);
 
             },
 
@@ -321,25 +296,14 @@ window.onload = function () {
 
                 console.log(error);
 
-            },
-
-            {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
             }
 
         );
-
-    } else {
-
-        alert("Geolocation not supported");
     }
-
-    // LOAD DATABASE
 
     loadData();
 };
+
 // =========================
 // FIND ROUTE
 // =========================
@@ -396,7 +360,7 @@ async function findRoute() {
     }
 
     // =========================
-    // USE MANUAL START LOCATION
+    // USE MANUAL LOCATION
     // =========================
 
     else {
@@ -432,18 +396,14 @@ async function findRoute() {
     let endLng =
         parseFloat(endData[0].lon);
 
-    // =========================
     // REMOVE OLD ROUTE
-    // =========================
 
     if (routingControl) {
 
         map.removeControl(routingControl);
     }
 
-    // =========================
     // CREATE ROUTE
-    // =========================
 
     routingControl = L.Routing.control({
 
@@ -468,77 +428,139 @@ async function findRoute() {
 
     }).addTo(map);
 
-    // =========================
-    // MOVE MAP TO START
-    // =========================
-
     map.setView([startLat, startLng], 7);
+
+    startRealTracking();
 }
+
 // =========================
-// START TRIP SIMULATION
+// START REAL GPS TRACKING
 // =========================
 
-function startTripSimulation(routeCoordinates) {
+function startRealTracking() {
 
-    if (tripInterval) {
+    // STOP OLD TRACKING
 
-        clearInterval(tripInterval);
+    if (watchId !== null) {
+
+        navigator.geolocation.clearWatch(watchId);
     }
 
-    let index = 0;
+    tripStarted = true;
 
-    tripInterval = setInterval(() => {
+    tripData = [];
 
-        if (index >= routeCoordinates.length) {
+    watchId = navigator.geolocation.watchPosition(
 
-            clearInterval(tripInterval);
+        function(position) {
 
-            alert("Trip Completed");
+            let lat =
+                position.coords.latitude;
 
-            return;
+            let lng =
+                position.coords.longitude;
+
+            vehicleMarker.setLatLng([lat, lng]);
+
+            map.setView([lat, lng], 15);
+
+            // REAL SPEED
+
+            let speed =
+                position.coords.speed;
+
+            if (speed === null || speed < 0) {
+
+                speed = Math.floor(Math.random() * 80);
+
+            } else {
+
+                speed = Math.round(speed * 3.6);
+            }
+
+            let distance =
+                Math.floor(Math.random() * 50);
+
+            let weather =
+                Math.random() > 0.5 ? 1 : 0;
+
+            document.getElementById("liveSpeed").innerText =
+                speed;
+
+            document.getElementById("liveDistance").innerText =
+                distance;
+
+            document.getElementById("liveWeather").innerText =
+                weather;
+
+            // AI PREDICTION
+
+            fetch(
+                `https://autonomous-fleet-ai-1.onrender.com/predict?speed=${speed}&distance=${distance}&weather=${weather}`
+            )
+
+            .then(res => res.json())
+
+            .then(data => {
+
+                let brake =
+                    data.brake_prob;
+
+                let accel =
+                    data.accelerate_prob;
+
+                updateLiveChart(brake, accel);
+
+                moveCars(accel);
+
+                // SAVE TRIP DATA
+
+                tripData.push({
+
+                    speed: speed,
+                    brake: brake,
+                    accel: accel,
+                    time: new Date().toLocaleTimeString()
+
+                });
+
+            });
+
+        },
+
+        function(error) {
+
+            console.log(error);
+
+        },
+
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 5000
         }
 
-        let point =
-            routeCoordinates[index];
-
-        let lat =
-            point.lat;
-
-        let lng =
-            point.lng;
-
-        vehicleMarker.setLatLng([lat, lng]);
-
-        map.setView([lat, lng], 15);
-
-        // RANDOM DRIVING DATA
-
-        let speed =
-            Math.floor(Math.random() * 100);
-
-        let brake =
-            Math.floor(Math.random() * 100);
-
-        let accel =
-            100 - brake;
-
-        document.getElementById("liveSpeed").innerText =
-            speed;
-
-        document.getElementById("liveDistance").innerText =
-            Math.floor(Math.random() * 50);
-
-        document.getElementById("liveWeather").innerText =
-            Math.random() > 0.5 ? 1 : 0;
-
-        updateLiveChart(brake, accel);
-
-        moveCars(accel);
-
-        index++;
-
-    }, 1000);
+    );
 }
+
+// =========================
+// STOP TRIP
+// =========================
+
+function stopTrip() {
+
+    if (watchId !== null) {
+
+        navigator.geolocation.clearWatch(watchId);
+
+        watchId = null;
+    }
+
+    tripStarted = false;
+
+    alert("Trip Ended Successfully");
+}
+
 // =========================
 // LOAD DATABASE
 // =========================
@@ -616,7 +638,7 @@ function loadData() {
 }
 
 // =========================
-// ANALYTICS
+// ANALYTICS CHART
 // =========================
 
 function drawAnalytics(data) {
