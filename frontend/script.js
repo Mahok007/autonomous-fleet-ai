@@ -269,7 +269,7 @@ window.onload = function () {
     vehicleMarker =
         L.marker([20.5937, 78.9629]).addTo(map);
 
-    // GET CURRENT LOCATION
+    // GET CURRENT LOCATION ONLY FOR MAP
 
     if (navigator.geolocation) {
 
@@ -283,35 +283,29 @@ window.onload = function () {
                 let lng =
                     position.coords.longitude;
 
+                // MOVE MAP TO CURRENT LOCATION
+
                 map.setView([lat, lng], 13);
+
+                // SET VEHICLE MARKER
 
                 vehicleMarker.setLatLng([lat, lng]);
 
-                // AUTO FILL START LOCATION
+            },
 
-                fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-                )
+            function(error) {
 
-                .then(res => res.json())
-
-                .then(data => {
-
-                    document.getElementById(
-                        "startLocation"
-                    ).value =
-                        data.display_name;
-
-                });
+                console.log(error);
 
             }
 
         );
     }
 
+    // LOAD DATABASE
+
     loadData();
 };
-
 // =========================
 // FIND ROUTE
 // =========================
@@ -324,30 +318,79 @@ async function findRoute() {
     let end =
         document.getElementById("endLocation").value;
 
-    if (!start || !end) {
+    if (!end) {
 
-        alert("Enter both locations");
+        alert("Enter destination");
 
         return;
     }
 
-    let startRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${start}`
-    );
+    let startLat;
+    let startLng;
 
-    let startData = await startRes.json();
+    // =========================
+    // USE CURRENT LOCATION
+    // =========================
+
+    if (start.trim() === "") {
+
+        if (navigator.geolocation) {
+
+            const position =
+                await new Promise((resolve, reject) => {
+
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        reject
+                    );
+
+                });
+
+            startLat =
+                position.coords.latitude;
+
+            startLng =
+                position.coords.longitude;
+
+        } else {
+
+            alert("Geolocation not supported");
+
+            return;
+        }
+
+    }
+
+    // =========================
+    // USE MANUAL START LOCATION
+    // =========================
+
+    else {
+
+        let startRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${start}`
+        );
+
+        let startData =
+            await startRes.json();
+
+        startLat =
+            parseFloat(startData[0].lat);
+
+        startLng =
+            parseFloat(startData[0].lon);
+    }
+
+    // =========================
+    // DESTINATION LOCATION
+    // =========================
 
     let endRes = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
     );
 
-    let endData = await endRes.json();
-
-    let startLat =
-        parseFloat(startData[0].lat);
-
-    let startLng =
-        parseFloat(startData[0].lon);
+    let endData =
+        await endRes.json();
 
     let endLat =
         parseFloat(endData[0].lat);
@@ -355,10 +398,14 @@ async function findRoute() {
     let endLng =
         parseFloat(endData[0].lon);
 
+    // REMOVE OLD ROUTE
+
     if (routingControl) {
 
         map.removeControl(routingControl);
     }
+
+    // CREATE ROUTE
 
     routingControl = L.Routing.control({
 
@@ -373,19 +420,20 @@ async function findRoute() {
         routeWhileDragging: false
 
     }).addTo(map);
+
+    // START VEHICLE MOVEMENT
+
     routingControl.on('routesfound', function(e) {
 
-    let route =
-        e.routes[0].coordinates;
+        let route =
+            e.routes[0].coordinates;
 
-    startTripSimulation(route);
+        startTripSimulation(route);
 
-});
+    });
 
     map.setView([startLat, startLng], 7);
-
 }
-
 // =========================
 // START TRIP SIMULATION
 // =========================
