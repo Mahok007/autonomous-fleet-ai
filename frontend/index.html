@@ -13,7 +13,14 @@
 
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Leaflet Routing -->
+    <link rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
     <style>
 
@@ -141,9 +148,10 @@
         }
 
         #map {
-            height: 350px;
+            height: 500px;
             border-radius: 12px;
             overflow: hidden;
+            margin-top: 20px;
         }
 
         table {
@@ -461,12 +469,24 @@
 
 </div>
 
-<!-- MAP -->
+<!-- SMART ROUTE MAP -->
 <div class="section">
 
     <div class="card">
 
-        <h2>🗺 Live Vehicle Location</h2>
+        <h2>🗺 Smart Route Navigation</h2>
+
+        <input
+            id="startLocation"
+            placeholder="Enter Start Location">
+
+        <input
+            id="endLocation"
+            placeholder="Enter Destination">
+
+        <button onclick="findRoute()">
+            Find Shortest Route
+        </button>
 
         <div id="map"></div>
 
