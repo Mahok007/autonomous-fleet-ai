@@ -256,8 +256,12 @@ function moveCars(accel) {
 
 window.onload = function () {
 
+    // CREATE MAP
+
     map =
         L.map("map").setView([20.5937, 78.9629], 5);
+
+    // MAP LAYER
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -266,14 +270,18 @@ window.onload = function () {
         }
     ).addTo(map);
 
+    // VEHICLE MARKER
+
     vehicleMarker =
         L.marker([20.5937, 78.9629]).addTo(map);
 
-    // GET CURRENT LOCATION ONLY FOR MAP
+    // =========================
+    // LIVE GPS TRACKING
+    // =========================
 
     if (navigator.geolocation) {
 
-        navigator.geolocation.getCurrentPosition(
+        navigator.geolocation.watchPosition(
 
             function(position) {
 
@@ -283,13 +291,29 @@ window.onload = function () {
                 let lng =
                     position.coords.longitude;
 
-                // MOVE MAP TO CURRENT LOCATION
-
-                map.setView([lat, lng], 13);
-
-                // SET VEHICLE MARKER
+                // MOVE VEHICLE MARKER
 
                 vehicleMarker.setLatLng([lat, lng]);
+
+                // CENTER MAP
+
+                map.setView([lat, lng], 15);
+
+                // SPEED
+
+                let speed =
+                    position.coords.speed;
+
+                if (!speed || speed < 0) {
+
+                    speed =
+                        Math.floor(Math.random() * 80);
+                }
+
+                document.getElementById(
+                    "liveSpeed"
+                ).innerText =
+                    Math.round(speed);
 
             },
 
@@ -297,9 +321,19 @@ window.onload = function () {
 
                 console.log(error);
 
+            },
+
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
             }
 
         );
+
+    } else {
+
+        alert("Geolocation not supported");
     }
 
     // LOAD DATABASE
@@ -398,14 +432,18 @@ async function findRoute() {
     let endLng =
         parseFloat(endData[0].lon);
 
+    // =========================
     // REMOVE OLD ROUTE
+    // =========================
 
     if (routingControl) {
 
         map.removeControl(routingControl);
     }
 
+    // =========================
     // CREATE ROUTE
+    // =========================
 
     routingControl = L.Routing.control({
 
@@ -417,20 +455,22 @@ async function findRoute() {
 
         ],
 
-        routeWhileDragging: false
+        routeWhileDragging: false,
+
+        draggableWaypoints: false,
+
+        addWaypoints: false,
+
+        createMarker: function(i, wp) {
+
+            return L.marker(wp.latLng);
+        }
 
     }).addTo(map);
 
-    // START VEHICLE MOVEMENT
-
-    routingControl.on('routesfound', function(e) {
-
-        let route =
-            e.routes[0].coordinates;
-
-        startTripSimulation(route);
-
-    });
+    // =========================
+    // MOVE MAP TO START
+    // =========================
 
     map.setView([startLat, startLng], 7);
 }
