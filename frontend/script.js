@@ -17,6 +17,13 @@ let tripData = [];
 let watchId = null;
 let tripStarted = false;
 
+// REAL CALCULATION VARIABLES
+
+let previousLat = null;
+let previousLng = null;
+let previousTime = null;
+let previousSpeed = 0;
+
 // =========================
 // TRAIN MODEL
 // =========================
@@ -272,7 +279,7 @@ window.onload = function () {
     vehicleMarker =
         L.marker([20.5937, 78.9629]).addTo(map);
 
-    // ONLY SET CURRENT LOCATION ONCE
+    // CURRENT LOCATION ONLY ONCE
 
     if (navigator.geolocation) {
 
@@ -326,9 +333,7 @@ async function findRoute() {
     let startLat;
     let startLng;
 
-    // =========================
-    // USE CURRENT LOCATION
-    // =========================
+    // CURRENT LOCATION
 
     if (start.trim() === "") {
 
@@ -359,9 +364,7 @@ async function findRoute() {
 
     }
 
-    // =========================
-    // USE MANUAL LOCATION
-    // =========================
+    // MANUAL LOCATION
 
     else {
 
@@ -379,9 +382,7 @@ async function findRoute() {
             parseFloat(startData[0].lon);
     }
 
-    // =========================
-    // DESTINATION LOCATION
-    // =========================
+    // DESTINATION
 
     let endRes = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
@@ -439,8 +440,6 @@ async function findRoute() {
 
 function startRealTracking() {
 
-    // STOP OLD TRACKING
-
     if (watchId !== null) {
 
         navigator.geolocation.clearWatch(watchId);
@@ -449,6 +448,11 @@ function startRealTracking() {
     tripStarted = true;
 
     tripData = [];
+
+    previousLat = null;
+    previousLng = null;
+    previousTime = null;
+    previousSpeed = 0;
 
     watchId = navigator.geolocation.watchPosition(
 
@@ -460,23 +464,69 @@ function startRealTracking() {
             let lng =
                 position.coords.longitude;
 
+            let currentTime =
+                new Date().getTime();
+
             vehicleMarker.setLatLng([lat, lng]);
 
             map.setView([lat, lng], 15);
 
+            // =========================
             // REAL SPEED
+            // =========================
 
-            let speed =
-                position.coords.speed;
+            let speed = 0;
 
-            if (speed === null || speed < 0) {
+            if (
+                previousLat !== null &&
+                previousLng !== null
+            ) {
 
-                speed = Math.floor(Math.random() * 80);
+                let distance =
+                    getDistanceFromLatLonInKm(
+                        previousLat,
+                        previousLng,
+                        lat,
+                        lng
+                    );
+
+                let timeDiff =
+                    (currentTime - previousTime) / 1000;
+
+                speed =
+                    (distance / timeDiff) * 3600;
+
+                speed =
+                    Math.round(speed);
+            }
+
+            // =========================
+            // REAL BRAKE & ACCELERATION
+            // =========================
+
+            let accel = 0;
+            let brake = 0;
+
+            if (speed > previousSpeed) {
+
+                accel =
+                    speed - previousSpeed;
 
             } else {
 
-                speed = Math.round(speed * 3.6);
+                brake =
+                    previousSpeed - speed;
             }
+
+            if (accel > 100)
+                accel = 100;
+
+            if (brake > 100)
+                brake = 100;
+
+            // =========================
+            // RANDOM SENSOR VALUES
+            // =========================
 
             let distance =
                 Math.floor(Math.random() * 50);
@@ -484,47 +534,53 @@ function startRealTracking() {
             let weather =
                 Math.random() > 0.5 ? 1 : 0;
 
-            document.getElementById("liveSpeed").innerText =
-                speed;
+            // =========================
+            // UPDATE UI
+            // =========================
 
-            document.getElementById("liveDistance").innerText =
-                distance;
+            document.getElementById(
+                "liveSpeed"
+            ).innerText = speed;
 
-            document.getElementById("liveWeather").innerText =
-                weather;
+            document.getElementById(
+                "liveDistance"
+            ).innerText = distance;
 
-            // AI PREDICTION
+            document.getElementById(
+                "liveWeather"
+            ).innerText = weather;
 
-            fetch(
-                `https://autonomous-fleet-ai-1.onrender.com/predict?speed=${speed}&distance=${distance}&weather=${weather}`
-            )
+            // =========================
+            // UPDATE CHARTS
+            // =========================
 
-            .then(res => res.json())
+            updateLiveChart(brake, accel);
 
-            .then(data => {
+            drawChart(brake, accel);
 
-                let brake =
-                    data.brake_prob;
+            moveCars(accel);
 
-                let accel =
-                    data.accelerate_prob;
+            // =========================
+            // SAVE TRIP DATA
+            // =========================
 
-                updateLiveChart(brake, accel);
+            tripData.push({
 
-                moveCars(accel);
-
-                // SAVE TRIP DATA
-
-                tripData.push({
-
-                    speed: speed,
-                    brake: brake,
-                    accel: accel,
-                    time: new Date().toLocaleTimeString()
-
-                });
+                speed: speed,
+                brake: brake,
+                accel: accel,
+                latitude: lat,
+                longitude: lng,
+                time: new Date().toLocaleTimeString()
 
             });
+
+            // SAVE PREVIOUS VALUES
+
+            previousLat = lat;
+            previousLng = lng;
+            previousTime = currentTime;
+            previousSpeed = speed;
 
         },
 
@@ -559,6 +615,51 @@ function stopTrip() {
     tripStarted = false;
 
     alert("Trip Ended Successfully");
+}
+
+// =========================
+// DISTANCE FORMULA
+// =========================
+
+function getDistanceFromLatLonInKm(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+) {
+
+    let R = 6371;
+
+    let dLat =
+        deg2rad(lat2 - lat1);
+
+    let dLon =
+        deg2rad(lon2 - lon1);
+
+    let a =
+        Math.sin(dLat / 2) *
+        Math.sin(dLat / 2) +
+
+        Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    let c =
+        2 * Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        );
+
+    let d = R * c;
+
+    return d;
+}
+
+function deg2rad(deg) {
+
+    return deg * (Math.PI / 180);
 }
 
 // =========================
