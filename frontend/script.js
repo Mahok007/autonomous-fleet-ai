@@ -994,6 +994,10 @@ function askAI() {
 // TRAFFIC API
 // =========================
 
+// =========================
+// TRAFFIC API
+// =========================
+
 async function getTrafficData(lat, lng) {
 
     const apiKey =
@@ -1009,6 +1013,8 @@ async function getTrafficData(lat, lng) {
 
         const data =
             await response.json();
+
+        console.log(data);
 
         if (!data.flowSegmentData) {
 
@@ -1029,28 +1035,63 @@ async function getTrafficData(lat, lng) {
         let freeFlowSpeed =
             data.flowSegmentData.freeFlowSpeed;
 
+        let confidence =
+            data.flowSegmentData.confidence || 0;
+
+        // SPEED DIFFERENCE
+
         let delay =
-            freeFlowSpeed - currentSpeed;
+            Math.max(
+                0,
+                freeFlowSpeed - currentSpeed
+            );
 
-        let traffic =
-            "Low";
+        // TRAFFIC PERCENTAGE
 
-        if (delay > 20) {
+        let trafficPercent =
+            ((delay / freeFlowSpeed) * 100);
+
+        let traffic = "Low";
+
+        // BETTER DETECTION
+
+        if (
+            trafficPercent >= 50 ||
+            currentSpeed < 20
+        ) {
 
             traffic = "High";
 
-        } else if (delay > 10) {
+        }
+
+        else if (
+            trafficPercent >= 25 ||
+            currentSpeed < 40
+        ) {
 
             traffic = "Moderate";
         }
 
+        // UPDATE UI
+
         document.getElementById(
             "trafficLevel"
-        ).innerText = traffic;
+        ).innerText =
+            traffic;
 
         document.getElementById(
             "trafficDelay"
-        ).innerText = delay;
+        ).innerText =
+            delay.toFixed(1);
+
+        console.log({
+            currentSpeed,
+            freeFlowSpeed,
+            delay,
+            trafficPercent,
+            confidence,
+            traffic
+        });
 
     }
 
