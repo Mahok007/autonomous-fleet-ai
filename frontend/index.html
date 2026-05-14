@@ -3,1207 +3,715 @@
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>
-        Autonomous Fleet AI Platform
-    </title>
-
-    <!-- GOOGLE FONT -->
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
-        rel="stylesheet">
-
-    <!-- CHART -->
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- LEAFLET -->
-
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <!-- ROUTING -->
-
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
-
-    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-
-    <style>
-
-        *{
-            box-sizing:border-box;
-        }
-
-        body{
-
-            margin:0;
-
-            font-family:'Poppins',sans-serif;
-
-            background:#0f172a;
-
-            color:white;
-        }
-
-        header{
-
-            background:#1e293b;
-
-            padding:20px;
-
-            text-align:center;
-
-            font-size:30px;
-
-            font-weight:bold;
-
-            position:sticky;
-
-            top:0;
-
-            z-index:1000;
-        }
-
-        .container{
-
-            padding:20px;
-        }
-
-        .card{
-
-            background:#1e293b;
-
-            padding:20px;
-
-            border-radius:15px;
-
-            margin-bottom:20px;
-
-            box-shadow:0 0 15px rgba(0,0,0,0.4);
-        }
-
-        h2{
-
-            color:#60a5fa;
-        }
-
-        input{
-
-            width:100%;
-
-            padding:12px;
-
-            margin-top:10px;
-
-            border:none;
-
-            border-radius:8px;
-
-            outline:none;
-
-            font-size:15px;
-        }
-
-        button{
-
-            width:100%;
-
-            padding:12px;
-
-            margin-top:10px;
-
-            border:none;
-
-            border-radius:8px;
-
-            background:#2563eb;
-
-            color:white;
-
-            font-size:15px;
-
-            cursor:pointer;
-
-            transition:0.3s;
-        }
-
-        button:hover{
-
-            background:#1d4ed8;
-
-            transform:scale(1.01);
-        }
-
-        .green-btn{
-
-            background:#22c55e;
-        }
-
-        .red-btn{
-
-            background:#ef4444;
-        }
-
-        .purple-btn{
-
-            background:#8b5cf6;
-        }
-
-        #map{
-
-            width:100%;
-
-            height:500px;
-
-            margin-top:20px;
-
-            border-radius:15px;
-
-            overflow:hidden;
-        }
-
-        .status-box{
-
-            margin-top:20px;
-
-            background:#0f172a;
-
-            padding:15px;
-
-            border-radius:12px;
-        }
-
-        .status-box p{
-
-            margin:10px 0;
-        }
-
-        canvas{
-
-            background:white;
-
-            border-radius:12px;
-
-            padding:10px;
-
-            margin-top:20px;
-        }
-
-        .grid{
-
-            display:grid;
-
-            grid-template-columns:
-            repeat(auto-fit,minmax(300px,1fr));
-
-            gap:20px;
-        }
-
-        .kpi{
-
-            text-align:center;
-        }
-
-        .kpi h1{
-
-            color:#22c55e;
-
-            font-size:40px;
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Autonomous Fleet AI Platform</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:#0f172a;
+color:white;
+}
+
+header{
+background:#1e293b;
+padding:20px;
+font-size:30px;
+font-weight:bold;
+text-align:center;
+position:sticky;
+top:0;
+z-index:999;
+}
+
+.container{
+padding:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 0 15px rgba(0,0,0,0.4);
+}
+
+h2{
+color:#60a5fa;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+font-size:15px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.green-btn{
+background:#22c55e;
+}
+
+.red-btn{
+background:#ef4444;
+}
+
+.purple-btn{
+background:#8b5cf6;
+}
+
+.kpi{
+text-align:center;
+}
+
+.kpi h1{
+font-size:40px;
+color:#22c55e;
+}
+
+canvas{
+background:white;
+border-radius:10px;
+padding:10px;
+margin-top:20px;
+}
+
+#map{
+height:500px;
+width:100%;
+margin-top:20px;
+border-radius:15px;
+overflow:hidden;
+}
+
+.status-box{
+background:#0f172a;
+padding:15px;
+border-radius:10px;
+margin-top:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+table th{
+background:#2563eb;
+padding:10px;
+}
+
+table td{
+padding:10px;
+text-align:center;
+}
+
+table tr:nth-child(even){
+background:#334155;
+}
+
+#aiResponse{
+margin-top:15px;
+padding:15px;
+background:#0f172a;
+border-radius:10px;
+min-height:100px;
+color:#22c55e;
+}
+
+</style>
 
 </head>
 
 <body>
 
 <header>
-
-    🚗 Autonomous Fleet AI Platform
-
+🚗 Autonomous Fleet AI Platform
 </header>
 
 <div class="container">
 
-    <!-- KPI -->
+<!-- KPI -->
 
-    <div class="grid">
+<div class="grid">
 
-        <div class="card kpi">
+<div class="card kpi">
+<h2>Total Trips</h2>
+<h1 id="tripCount">0</h1>
+</div>
 
-            <h2>Total Trips</h2>
+<div class="card kpi">
+<h2>Brake Events</h2>
+<h1 id="totalBrake">0</h1>
+</div>
 
-            <h1 id="tripCount">
+<div class="card kpi">
+<h2>Acceleration Events</h2>
+<h1 id="totalAccel">0</h1>
+</div>
 
-                0
+</div>
 
-            </h1>
+<!-- ROUTE -->
 
-        </div>
+<div class="card">
 
-        <div class="card kpi">
+<h2>🗺 Smart Route Navigation</h2>
 
-            <h2>Brake Events</h2>
+<input id="startLocation" placeholder="Enter Start Location">
 
-            <h1 id="totalBrake">
+<input id="endLocation" placeholder="Enter Destination">
 
-                0
+<button onclick="findRoute()">
+Find Shortest Route
+</button>
 
-            </h1>
+<button class="green-btn"
+onclick="startRealTracking()">
+▶ Start Trip
+</button>
 
-        </div>
+<button class="red-btn"
+onclick="stopTrip()">
+⏹ End Trip
+</button>
 
-        <div class="card kpi">
+<button class="purple-btn"
+onclick="downloadTripReport()">
+📄 Download Trip Report
+</button>
 
-            <h2>Acceleration Events</h2>
+<div class="status-box">
 
-            <h1 id="totalAccel">
+<h3>🚘 Live Trip Status</h3>
 
-                0
+<p>
+Trip Status:
+<span id="tripStatus"
+style="color:#ef4444;font-weight:bold;">
+NOT STARTED
+</span>
+</p>
 
-            </h1>
+<p>
+Current Speed:
+<span id="currentSpeed">0</span>
+km/h
+</p>
 
-        </div>
+<hr>
 
-    </div>
+<h3>🚦 Traffic Status</h3>
 
-    <!-- ROUTE SECTION -->
+<p>
+Traffic Level:
+<span id="trafficLevel">
+Loading...
+</span>
+</p>
 
-    <div class="card">
+<p>
+Delay:
+<span id="trafficDelay">0</span>
+mins
+</p>
 
-        <h2>
+</div>
 
-            🗺 Smart Route Navigation
+<div id="map"></div>
 
-        </h2>
+</div>
 
-        <input
-            id="startLocation"
-            placeholder="Enter Start Location">
+<!-- CHARTS -->
 
-        <input
-            id="endLocation"
-            placeholder="Enter Destination">
+<div class="grid">
 
-        <button onclick="findRoute()">
+<div class="card">
 
-            Find Shortest Route
+<h2>📈 Speed Analytics</h2>
 
-        </button>
+<canvas id="speedChart"></canvas>
 
-        <button
-            class="green-btn"
-            onclick="startRealTracking()">
+</div>
 
-            ▶ Start Trip
+<div class="card">
 
-        </button>
+<h2>🧠 Decision Distribution</h2>
 
-        <button
-            class="red-btn"
-            onclick="stopTrip()">
+<canvas id="decisionChart"></canvas>
 
-            ⏹ End Trip
+</div>
 
-        </button>
+</div>
 
-        <button
-            class="purple-btn"
-            onclick="downloadTripReport()">
+<!-- AI ASSISTANT -->
 
-            📄 Download Trip Report
+<div class="card">
 
-        </button>
+<h2>🤖 Fleet AI Assistant</h2>
 
-        <!-- STATUS -->
+<input id="aiQuestion"
+placeholder="Ask AI something...">
 
-        <div class="status-box">
+<button onclick="askAI()">
+Ask AI
+</button>
 
-            <h3>
+<div id="aiResponse">
+AI waiting for query...
+</div>
 
-                🚘 Live Trip Status
+</div>
 
-            </h3>
+<!-- ADD DATA -->
 
-            <p>
+<div class="card">
 
-                Trip Status:
-                <span id="tripStatus"
-                      style="color:#ef4444;font-weight:bold;">
+<h2>🛠 Backend Data Control Panel</h2>
 
-                    NOT STARTED
+<input id="newSpeed" placeholder="Speed">
 
-                </span>
+<input id="newDistance" placeholder="Distance">
 
-            </p>
+<input id="newWeather" placeholder="Weather (0/1)">
 
-            <p>
+<input id="newAction" placeholder="Action (0=Brake,1=Accelerate)">
 
-                Current Speed:
-                <span id="currentSpeed">
+<button onclick="addData()">
+Add Data
+</button>
 
-                    0
+<button onclick="loadData()">
+Load Database Data
+</button>
 
-                </span>
+<table>
 
-                km/h
+<thead>
 
-            </p>
+<tr>
 
-            <hr>
+<th>ID</th>
+<th>Speed</th>
+<th>Distance</th>
+<th>Weather</th>
+<th>Action</th>
 
-            <h3>
+</tr>
 
-                🚦 Traffic Status
+</thead>
 
-            </h3>
+<tbody id="dataTable"></tbody>
 
-            <p>
+</table>
 
-                Traffic Level:
-                <span id="trafficLevel">
-
-                    Loading...
-
-                </span>
-
-            </p>
-
-            <p>
-
-                Delay:
-                <span id="trafficDelay">
-
-                    0
-
-                </span>
-
-                mins
-
-            </p>
-
-        </div>
-
-        <!-- MAP -->
-
-        <div id="map"></div>
-
-    </div>
-
-    <!-- CHARTS -->
-
-    <div class="grid">
-
-        <div class="card">
-
-            <h2>
-
-                📈 Speed Analytics
-
-            </h2>
-
-            <canvas id="speedChart"></canvas>
-
-        </div>
-
-        <div class="card">
-
-            <h2>
-
-                🧠 Decision Distribution
-
-            </h2>
-
-            <canvas id="decisionChart"></canvas>
-
-        </div>
-
-    </div>
+</div>
 
 </div>
 
 <script>
 
 let map;
-
 let routingControl;
-
 let vehicleMarker;
-
 let watchId = null;
-
 let tripData = [];
 
 let speedChart;
-
 let decisionChart;
 
 let speedLabels = [];
-
 let speedValues = [];
 
 let brakeEvents = 0;
-
 let accelEvents = 0;
 
 let previousLat = null;
-
 let previousLng = null;
-
 let previousTime = null;
-
 let previousSpeed = 0;
 
-let trafficInterval = null;
-
-// =====================
-// MAP INIT
-// =====================
+// MAP
 
 window.onload = function(){
 
-    map =
-    L.map("map")
-    .setView([20.5937,78.9629],5);
+map = L.map("map").setView([20.5937,78.9629],5);
 
-    L.tileLayer(
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+attribution:"© OpenStreetMap"
+}
+).addTo(map);
 
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+vehicleMarker = L.marker([20.5937,78.9629]).addTo(map);
 
-        {
-            attribution:"© OpenStreetMap"
-        }
+createCharts();
 
-    ).addTo(map);
-
-    let icon = L.icon({
-
-        iconUrl:
-        "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-
-        iconSize:[35,35],
-
-        iconAnchor:[17,35]
-
-    });
-
-    vehicleMarker =
-    L.marker(
-        [20.5937,78.9629],
-        {icon:icon}
-    ).addTo(map);
-
-    // ENTER KEY
-
-    document
-    .getElementById("endLocation")
-    .addEventListener(
-
-        "keypress",
-
-        function(e){
-
-            if(e.key==="Enter"){
-
-                findRoute();
-
-            }
-
-        }
-
-    );
-
-    createCharts();
+loadData();
 
 };
 
-// =====================
-// CREATE CHARTS
-// =====================
+// CHARTS
 
 function createCharts(){
 
-    // SPEED CHART
+speedChart = new Chart(
+document.getElementById("speedChart"),
+{
+type:"line",
+data:{
+labels:speedLabels,
+datasets:[{
+label:"Speed",
+data:speedValues,
+borderColor:"#22c55e",
+fill:false
+}]
+}
+}
+);
 
-    speedChart =
-    new Chart(
-
-        document
-        .getElementById("speedChart"),
-
-        {
-
-            type:"line",
-
-            data:{
-
-                labels:speedLabels,
-
-                datasets:[{
-
-                    label:"Speed",
-
-                    data:speedValues,
-
-                    borderColor:"#22c55e",
-
-                    fill:false
-
-                }]
-
-            }
-
-        }
-
-    );
-
-    // PIE CHART
-
-    decisionChart =
-    new Chart(
-
-        document
-        .getElementById("decisionChart"),
-
-        {
-
-            type:"pie",
-
-            data:{
-
-                labels:[
-                    "Brake",
-                    "Accelerate"
-                ],
-
-                datasets:[{
-
-                    data:[
-                        brakeEvents,
-                        accelEvents
-                    ],
-
-                    backgroundColor:[
-                        "#ef4444",
-                        "#22c55e"
-                    ]
-
-                }]
-
-            }
-
-        }
-
-    );
+decisionChart = new Chart(
+document.getElementById("decisionChart"),
+{
+type:"pie",
+data:{
+labels:["Brake","Accelerate"],
+datasets:[{
+data:[brakeEvents,accelEvents],
+backgroundColor:["#ef4444","#22c55e"]
+}]
+}
+}
+);
 
 }
 
-// =====================
-// FIND ROUTE
-// =====================
+// ROUTE
 
 async function findRoute(){
 
-    let start =
-    document
-    .getElementById("startLocation")
-    .value;
+let end =
+document.getElementById("endLocation").value;
 
-    let end =
-    document
-    .getElementById("endLocation")
-    .value;
+if(!end){
+alert("Enter destination");
+return;
+}
 
-    if(!end){
+const position =
+await new Promise((resolve,reject)=>{
+navigator.geolocation.getCurrentPosition(resolve,reject);
+});
 
-        alert("Enter destination");
+let startLat = position.coords.latitude;
+let startLng = position.coords.longitude;
 
-        return;
-
-    }
-
-    let startLat;
-
-    let startLng;
-
-    // CURRENT LOCATION
-
-    if(start.trim()===""){
-
-        const position =
-        await new Promise(
-
-            (resolve,reject)=>{
-
-                navigator
-                .geolocation
-                .getCurrentPosition(
-
-                    resolve,
-                    reject
-
-                );
-
-            }
-
-        );
-
-        startLat =
-        position.coords.latitude;
-
-        startLng =
-        position.coords.longitude;
-
-    }
-
-    // MANUAL LOCATION
-
-    else{
-
-        let startRes =
-        await fetch(
-
-`https://nominatim.openstreetmap.org/search?format=json&q=${start}`
-
-        );
-
-        let startData =
-        await startRes.json();
-
-        startLat =
-        parseFloat(startData[0].lat);
-
-        startLng =
-        parseFloat(startData[0].lon);
-
-    }
-
-    // DESTINATION
-
-    let endRes =
-    await fetch(
-
+let endRes =
+await fetch(
 `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
+);
 
-    );
+let endData = await endRes.json();
 
-    let endData =
-    await endRes.json();
+let endLat = parseFloat(endData[0].lat);
+let endLng = parseFloat(endData[0].lon);
 
-    let endLat =
-    parseFloat(endData[0].lat);
+if(routingControl){
+map.removeControl(routingControl);
+}
 
-    let endLng =
-    parseFloat(endData[0].lon);
+routingControl = L.Routing.control({
 
-    // REMOVE OLD ROUTE
+waypoints:[
+L.latLng(startLat,startLng),
+L.latLng(endLat,endLng)
+],
 
-    if(routingControl){
+routeWhileDragging:false
 
-        map.removeControl(
-            routingControl
-        );
+}).addTo(map);
 
-    }
-
-    // CREATE ROUTE
-
-    routingControl =
-    L.Routing.control({
-
-        waypoints:[
-
-            L.latLng(
-                startLat,
-                startLng
-            ),
-
-            L.latLng(
-                endLat,
-                endLng
-            )
-
-        ],
-
-        routeWhileDragging:false,
-
-        draggableWaypoints:false,
-
-        addWaypoints:false
-
-    }).addTo(map);
-
-    map.setView(
-        [startLat,startLng],
-        13
-    );
-
-    vehicleMarker.setLatLng(
-        [startLat,startLng]
-    );
-
-    // AUTO SCROLL
-
-    window.scrollTo({
-
-        top:
-        document
-        .getElementById("map")
-        .offsetTop - 80,
-
-        behavior:"smooth"
-
-    });
-
-    // FIX MAP SIZE
-
-    setTimeout(()=>{
-
-        map.invalidateSize();
-
-    },500);
-
-    // TRAFFIC
-
-    getTrafficData(
-        endLat,
-        endLng
-    );
-
-    // REFRESH TRAFFIC
-
-    if(trafficInterval){
-
-        clearInterval(
-            trafficInterval
-        );
-
-    }
-
-    trafficInterval =
-    setInterval(()=>{
-
-        getTrafficData(
-            endLat,
-            endLng
-        );
-
-    },15000);
+map.setView([startLat,startLng],13);
 
 }
 
-// =====================
-// TRAFFIC API
-// =====================
-
-async function getTrafficData(lat,lng){
-
-    const apiKey =
-    "18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
-
-    const url =
-`https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`;
-
-    try{
-
-        const response =
-        await fetch(url);
-
-        const data =
-        await response.json();
-
-        if(!data.flowSegmentData){
-
-            document
-            .getElementById("trafficLevel")
-            .innerText="Unavailable";
-
-            return;
-
-        }
-
-        let currentSpeed =
-        data.flowSegmentData.currentSpeed;
-
-        let freeFlowSpeed =
-        data.flowSegmentData.freeFlowSpeed;
-
-        let delay =
-        freeFlowSpeed-currentSpeed;
-
-        let traffic="Low";
-
-        if(delay>20){
-
-            traffic="High";
-
-        }
-
-        else if(delay>10){
-
-            traffic="Moderate";
-
-        }
-
-        document
-        .getElementById("trafficLevel")
-        .innerText=traffic;
-
-        document
-        .getElementById("trafficDelay")
-        .innerText=Math.round(delay);
-
-    }
-
-    catch(error){
-
-        console.log(error);
-
-        document
-        .getElementById("trafficLevel")
-        .innerText="Error";
-
-    }
-
-}
-
-// =====================
 // START TRACKING
-// =====================
 
 function startRealTracking(){
 
-    document
-    .getElementById("tripStatus")
-    .innerText="TRIP STARTED";
+document.getElementById("tripStatus").innerText =
+"TRIP STARTED";
 
-    document
-    .getElementById("tripStatus")
-    .style.color="#22c55e";
+document.getElementById("tripStatus").style.color =
+"#22c55e";
 
-    if(watchId!==null){
+watchId =
+navigator.geolocation.watchPosition(
 
-        navigator
-        .geolocation
-        .clearWatch(watchId);
+function(position){
 
-    }
+let lat = position.coords.latitude;
+let lng = position.coords.longitude;
 
-    watchId =
-    navigator
-    .geolocation
-    .watchPosition(
+vehicleMarker.setLatLng([lat,lng]);
 
-        function(position){
+map.setView([lat,lng],15);
 
-            let lat =
-            position.coords.latitude;
+let speed = Math.floor(Math.random()*120);
 
-            let lng =
-            position.coords.longitude;
+document.getElementById("currentSpeed").innerText =
+speed;
 
-            let currentTime =
-            new Date().getTime();
+speedLabels.push(
+new Date().toLocaleTimeString()
+);
 
-            vehicleMarker.setLatLng(
-                [lat,lng]
-            );
+speedValues.push(speed);
 
-            map.setView(
-                [lat,lng],
-                15
-            );
+if(speedLabels.length>15){
 
-            let speed = 0;
-
-            if(
-
-                previousLat!==null &&
-                previousLng!==null
-
-            ){
-
-                let distance =
-                getDistance(
-
-                    previousLat,
-                    previousLng,
-                    lat,
-                    lng
-
-                );
-
-                let timeDiff =
-                (currentTime-previousTime)/1000;
-
-                if(timeDiff>0){
-
-                    speed =
-                    (distance/timeDiff)*3600;
-
-                    speed =
-                    Math.round(speed);
-
-                }
-
-            }
-
-            if(speed>180){
-
-                speed=180;
-
-            }
-
-            // DECISION
-
-            if(speed>previousSpeed){
-
-                accelEvents++;
-
-            }
-
-            else{
-
-                brakeEvents++;
-
-            }
-
-            // UPDATE UI
-
-            document
-            .getElementById("currentSpeed")
-            .innerText=speed;
-
-            document
-            .getElementById("totalBrake")
-            .innerText=brakeEvents;
-
-            document
-            .getElementById("totalAccel")
-            .innerText=accelEvents;
-
-            // CHART
-
-            speedLabels.push(
-                new Date()
-                .toLocaleTimeString()
-            );
-
-            speedValues.push(speed);
-
-            if(speedLabels.length>15){
-
-                speedLabels.shift();
-
-                speedValues.shift();
-
-            }
-
-            speedChart.update();
-
-            decisionChart.data.datasets[0].data=[
-                brakeEvents,
-                accelEvents
-            ];
-
-            decisionChart.update();
-
-            // STORE
-
-            tripData.push({
-
-                latitude:lat,
-
-                longitude:lng,
-
-                speed:speed,
-
-                time:new Date()
-                .toLocaleTimeString()
-
-            });
-
-            previousLat = lat;
-
-            previousLng = lng;
-
-            previousTime = currentTime;
-
-            previousSpeed = speed;
-
-        },
-
-        function(error){
-
-            console.log(error);
-
-        },
-
-        {
-
-            enableHighAccuracy:true,
-
-            maximumAge:0,
-
-            timeout:5000
-
-        }
-
-    );
+speedLabels.shift();
+speedValues.shift();
 
 }
 
-// =====================
-// STOP TRIP
-// =====================
+speedChart.update();
+
+if(speed > previousSpeed){
+
+accelEvents++;
+
+}else{
+
+brakeEvents++;
+
+}
+
+document.getElementById("totalBrake").innerText =
+brakeEvents;
+
+document.getElementById("totalAccel").innerText =
+accelEvents;
+
+decisionChart.data.datasets[0].data = [
+brakeEvents,
+accelEvents
+];
+
+decisionChart.update();
+
+previousSpeed = speed;
+
+tripData.push({
+lat,
+lng,
+speed
+});
+
+},
+
+function(error){
+console.log(error);
+},
+
+{
+enableHighAccuracy:true
+}
+
+);
+
+}
+
+// STOP
 
 function stopTrip(){
 
-    document
-    .getElementById("tripStatus")
-    .innerText="TRIP ENDED";
+document.getElementById("tripStatus").innerText =
+"TRIP ENDED";
 
-    document
-    .getElementById("tripStatus")
-    .style.color="#ef4444";
+document.getElementById("tripStatus").style.color =
+"#ef4444";
 
-    if(watchId!==null){
-
-        navigator
-        .geolocation
-        .clearWatch(watchId);
-
-        watchId = null;
-
-    }
+navigator.geolocation.clearWatch(watchId);
 
 }
 
-// =====================
-// DOWNLOAD REPORT
-// =====================
+// REPORT
 
 function downloadTripReport(){
 
-    let report =
-`AI Fleet Trip Report
+let report = "AI Fleet Report\n\n";
 
-====================
+tripData.forEach((item,index)=>{
 
-`;
-
-    tripData.forEach(
-
-        (item,index)=>{
-
-            report +=
-
-`
+report += `
 Point ${index+1}
 
-Time: ${item.time}
-
-Latitude: ${item.latitude}
-
-Longitude: ${item.longitude}
-
-Speed: ${item.speed} km/h
-
----------------------
+Latitude: ${item.lat}
+Longitude: ${item.lng}
+Speed: ${item.speed}
 
 `;
 
-        }
+});
 
-    );
+const blob =
+new Blob([report],{type:"text/plain"});
 
-    const blob =
-    new Blob(
+const link =
+document.createElement("a");
 
-        [report],
+link.href =
+URL.createObjectURL(blob);
 
-        {
-            type:"text/plain"
-        }
+link.download =
+"trip_report.txt";
 
-    );
-
-    const link =
-    document.createElement("a");
-
-    link.href =
-    URL.createObjectURL(blob);
-
-    link.download =
-    "trip_report.txt";
-
-    link.click();
+link.click();
 
 }
 
-// =====================
-// DISTANCE FORMULA
-// =====================
+// AI
 
-function getDistance(
+function askAI(){
 
-    lat1,
-    lon1,
-    lat2,
-    lon2
+let question =
+document.getElementById("aiQuestion").value;
 
-){
-
-    let R = 6371;
-
-    let dLat =
-    deg2rad(lat2-lat1);
-
-    let dLon =
-    deg2rad(lon2-lon1);
-
-    let a =
-
-    Math.sin(dLat/2) *
-    Math.sin(dLat/2)
-
-    +
-
-    Math.cos(deg2rad(lat1))
-
-    *
-
-    Math.cos(deg2rad(lat2))
-
-    *
-
-    Math.sin(dLon/2)
-
-    *
-
-    Math.sin(dLon/2);
-
-    let c =
-    2*Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1-a)
-    );
-
-    return R*c;
+document.getElementById("aiResponse").innerText =
+"AI Response:\n" + question;
 
 }
 
-function deg2rad(deg){
+// LOAD DATA
 
-    return deg*(Math.PI/180);
+function loadData(){
+
+fetch("https://autonomous-fleet-ai-1.onrender.com/data")
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let table =
+document.getElementById("dataTable");
+
+table.innerHTML = "";
+
+data.forEach(item=>{
+
+table.innerHTML += `
+
+<tr>
+
+<td>${item.id}</td>
+<td>${item.speed}</td>
+<td>${item.distance}</td>
+<td>${item.weather}</td>
+<td>${item.action}</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("tripCount").innerText =
+data.length;
+
+});
+
+}
+
+// ADD DATA
+
+function addData(){
+
+let speed =
+document.getElementById("newSpeed").value;
+
+let distance =
+document.getElementById("newDistance").value;
+
+let weather =
+document.getElementById("newWeather").value;
+
+let action =
+document.getElementById("newAction").value;
+
+fetch(
+"https://autonomous-fleet-ai-1.onrender.com/add_data",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+speed,
+distance,
+weather,
+action
+})
+}
+)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+alert(data.message);
+
+loadData();
+
+});
 
 }
 
