@@ -11,20 +11,20 @@ let map;
 let routingControl;
 let vehicleMarker;
 
-let tripInterval = null;
 let tripData = [];
 
 let watchId = null;
 let tripStarted = false;
 
-// =========================
-// REAL TRACKING VARIABLES
-// =========================
-
 let previousLat = null;
 let previousLng = null;
 let previousTime = null;
 let previousSpeed = 0;
+
+let trafficInterval = null;
+
+let totalBrakeEvents = 0;
+let totalAccelEvents = 0;
 
 // =========================
 // TRAIN MODEL
@@ -285,8 +285,6 @@ window.onload = function () {
         }
     ).addTo(map);
 
-    // CUSTOM BLUE MARKER
-
     let blueIcon = L.icon({
 
         iconUrl:
@@ -303,8 +301,6 @@ window.onload = function () {
             { icon: blueIcon }
         ).addTo(map);
 
-    // GET CURRENT LOCATION ONCE
-
     if (navigator.geolocation) {
 
         navigator.geolocation.getCurrentPosition(
@@ -320,6 +316,8 @@ window.onload = function () {
                 map.setView([lat, lng], 13);
 
                 vehicleMarker.setLatLng([lat, lng]);
+
+                getTrafficData(lat, lng);
 
             },
 
@@ -357,8 +355,6 @@ async function findRoute() {
     let startLat;
     let startLng;
 
-    // CURRENT LOCATION
-
     if (start.trim() === "") {
 
         if (navigator.geolocation) {
@@ -386,11 +382,7 @@ async function findRoute() {
             return;
         }
 
-    }
-
-    // MANUAL START LOCATION
-
-    else {
+    } else {
 
         let startRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${start}`
@@ -406,8 +398,6 @@ async function findRoute() {
             parseFloat(startData[0].lon);
     }
 
-    // DESTINATION LOCATION
-
     let endRes = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
     );
@@ -421,14 +411,10 @@ async function findRoute() {
     let endLng =
         parseFloat(endData[0].lon);
 
-    // REMOVE OLD ROUTE
-
     if (routingControl) {
 
         map.removeControl(routingControl);
     }
-
-    // CREATE ROUTE
 
     routingControl = L.Routing.control({
 
@@ -454,10 +440,31 @@ async function findRoute() {
     }).addTo(map);
 
     map.setView([startLat, startLng], 7);
+
+    vehicleMarker.setLatLng([startLat, startLng]);
+
+    // CLEAR OLD TRAFFIC REFRESH
+
+    if (trafficInterval) {
+
+        clearInterval(trafficInterval);
+    }
+
+    // LOAD TRAFFIC IMMEDIATELY
+
+    getTrafficData(endLat, endLng);
+
+    // AUTO REFRESH TRAFFIC EVERY 15 SEC
+
+    trafficInterval = setInterval(() => {
+
+        getTrafficData(endLat, endLng);
+
+    }, 15000);
 }
 
 // =========================
-// START REAL GPS TRACKING
+// START REAL TRACKING
 // =========================
 
 function startRealTracking() {
@@ -470,6 +477,9 @@ function startRealTracking() {
     tripStarted = true;
 
     tripData = [];
+
+    totalBrakeEvents = 0;
+    totalAccelEvents = 0;
 
     previousLat = null;
     previousLng = null;
@@ -497,16 +507,11 @@ function startRealTracking() {
             let currentTime =
                 new Date().getTime();
 
-            // MOVE MARKER
-
             vehicleMarker.setLatLng([lat, lng]);
-            getTrafficData(lat, lng);
 
             map.setView([lat, lng], 15);
 
-            // =========================
-            // REAL SPEED CALCULATION
-            // =========================
+            getTrafficData(lat, lng);
 
             let speed = 0;
 
@@ -536,16 +541,10 @@ function startRealTracking() {
                 }
             }
 
-            // LIMIT MAX SPEED
-
             if (speed > 180) {
 
                 speed = 180;
             }
-
-            // =========================
-            // ACCELERATION & BRAKING
-            // =========================
 
             let accel = 0;
             let brake = 0;
@@ -555,10 +554,14 @@ function startRealTracking() {
                 accel =
                     speed - previousSpeed;
 
+                totalAccelEvents++;
+
             } else {
 
                 brake =
                     previousSpeed - speed;
+
+                totalBrakeEvents++;
             }
 
             if (accel > 100)
@@ -567,24 +570,16 @@ function startRealTracking() {
             if (brake > 100)
                 brake = 100;
 
-            // =========================
-            // SENSOR VALUES
-            // =========================
-
             let distance =
                 Math.floor(Math.random() * 50);
 
             let weather =
                 Math.random() > 0.5 ? 1 : 0;
 
-            // =========================
-            // UPDATE UI
-            // =========================
-
             document.getElementById(
                 "liveSpeed"
             ).innerText =
-                speed + " km/h";
+                speed;
 
             document.getElementById(
                 "liveDistance"
@@ -596,19 +591,26 @@ function startRealTracking() {
             ).innerText =
                 weather;
 
-            // =========================
-            // UPDATE CHARTS
-            // =========================
+            document.getElementById(
+                "currentSpeed"
+            ).innerText =
+                speed;
+
+            document.getElementById(
+                "totalBrake"
+            ).innerText =
+                totalBrakeEvents;
+
+            document.getElementById(
+                "totalAccel"
+            ).innerText =
+                totalAccelEvents;
 
             updateLiveChart(brake, accel);
 
             drawChart(brake, accel);
 
             moveCars(accel);
-
-            // =========================
-            // SAVE TRIP DATA
-            // =========================
 
             tripData.push({
 
@@ -621,8 +623,6 @@ function startRealTracking() {
                 time: new Date().toLocaleTimeString()
 
             });
-
-            // SAVE PREVIOUS VALUES
 
             previousLat = lat;
             previousLng = lng;
@@ -652,10 +652,6 @@ function startRealTracking() {
 
 function stopTrip() {
 
-    console.log(tripData);
-
-    // SAVE LOCAL STORAGE
-
     localStorage.setItem(
 
         "tripHistory",
@@ -664,8 +660,6 @@ function stopTrip() {
 
     );
 
-    // STOP TRACKING
-
     if (watchId !== null) {
 
         navigator.geolocation.clearWatch(watchId);
@@ -673,9 +667,12 @@ function stopTrip() {
         watchId = null;
     }
 
-    tripStarted = false;
+    if (trafficInterval) {
 
-    // UPDATE STATUS
+        clearInterval(trafficInterval);
+    }
+
+    tripStarted = false;
 
     document.getElementById(
         "tripStatus"
@@ -684,8 +681,6 @@ function stopTrip() {
     document.getElementById(
         "tripStatus"
     ).style.color = "#ef4444";
-
-    // SAVE TO BACKEND
 
     fetch(
 
@@ -731,47 +726,30 @@ function stopTrip() {
 }
 
 // =========================
-// DOWNLOAD TRIP REPORT
+// DOWNLOAD REPORT
 // =========================
 
 function downloadTripReport() {
 
-    let report = `
+    let report = `AI Fleet Trip Report\n\n`;
 
-AI Fleet Trip Report
-
-========================
-
-Total Points:
-${tripData.length}
-
-========================
-
-`;
+    report += `Total Points: ${tripData.length}\n\n`;
 
     tripData.forEach((item, index) => {
 
         report += `
-
 Point ${index + 1}
 
 Time: ${item.time}
-
 Speed: ${item.speed} km/h
-
 Brake: ${item.brake}
-
 Acceleration: ${item.accel}
-
 Weather: ${item.weather}
-
 Latitude: ${item.latitude}
-
 Longitude: ${item.longitude}
 
 ========================
 `;
-
     });
 
     const blob = new Blob(
@@ -826,9 +804,7 @@ function getDistanceFromLatLonInKm(
             Math.sqrt(1 - a)
         );
 
-    let d = R * c;
-
-    return d;
+    return R * c;
 }
 
 function deg2rad(deg) {
@@ -1013,6 +989,11 @@ function askAI() {
 
     });
 }
+
+// =========================
+// TRAFFIC API
+// =========================
+
 async function getTrafficData(lat, lng) {
 
     const apiKey =
@@ -1029,7 +1010,18 @@ async function getTrafficData(lat, lng) {
         const data =
             await response.json();
 
-        console.log(data);
+        if (!data.flowSegmentData) {
+
+            document.getElementById(
+                "trafficLevel"
+            ).innerText = "Unavailable";
+
+            document.getElementById(
+                "trafficDelay"
+            ).innerText = "0";
+
+            return;
+        }
 
         let currentSpeed =
             data.flowSegmentData.currentSpeed;
@@ -1066,5 +1058,12 @@ async function getTrafficData(lat, lng) {
 
         console.log(error);
 
+        document.getElementById(
+            "trafficLevel"
+        ).innerText = "Error";
+
+        document.getElementById(
+            "trafficDelay"
+        ).innerText = "0";
     }
 }
