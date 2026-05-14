@@ -1060,3 +1060,15 @@ async function getTrafficData(lat,lng){
     }
 
 }
+// =========================
+// LOGOUT
+// =========================
+
+function logout(){
+
+    localStorage.removeItem("token");
+
+    window.location.href =
+    "login.html";
+
+}
