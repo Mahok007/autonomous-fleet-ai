@@ -500,6 +500,7 @@ function startRealTracking() {
             // MOVE MARKER
 
             vehicleMarker.setLatLng([lat, lng]);
+            getTrafficData(lat, lng);
 
             map.setView([lat, lng], 15);
 
@@ -1011,4 +1012,59 @@ function askAI() {
             .innerText = data.response;
 
     });
+}
+async function getTrafficData(lat, lng) {
+
+    const apiKey =
+        "18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
+
+    const url =
+`https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`;
+
+    try {
+
+        const response =
+            await fetch(url);
+
+        const data =
+            await response.json();
+
+        console.log(data);
+
+        let currentSpeed =
+            data.flowSegmentData.currentSpeed;
+
+        let freeFlowSpeed =
+            data.flowSegmentData.freeFlowSpeed;
+
+        let delay =
+            freeFlowSpeed - currentSpeed;
+
+        let traffic =
+            "Low";
+
+        if (delay > 20) {
+
+            traffic = "High";
+
+        } else if (delay > 10) {
+
+            traffic = "Moderate";
+        }
+
+        document.getElementById(
+            "trafficLevel"
+        ).innerText = traffic;
+
+        document.getElementById(
+            "trafficDelay"
+        ).innerText = delay;
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+    }
 }
