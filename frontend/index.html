@@ -620,17 +620,47 @@ link.click();
 }
 
 // AI
+// AI ASSISTANT
 
 function askAI(){
 
 let question =
 document.getElementById("aiQuestion").value;
 
-document.getElementById("aiResponse").innerText =
-"AI Response:\n" + question;
+if(!question){
+
+alert("Enter question");
+
+return;
 
 }
 
+document.getElementById("aiResponse").innerText =
+"Thinking...";
+
+fetch(
+`https://autonomous-fleet-ai-1.onrender.com/ai_assistant?question=${encodeURIComponent(question)}`
+)
+
+.then(res => res.json())
+
+.then(data => {
+
+document.getElementById("aiResponse").innerText =
+data.response;
+
+})
+
+.catch(error => {
+
+console.log(error);
+
+document.getElementById("aiResponse").innerText =
+"AI Server Error";
+
+});
+
+}
 // LOAD DATA
 
 function loadData(){

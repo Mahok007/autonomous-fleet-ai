@@ -1,76 +1,56 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
+from pydantic import BaseModel
+import jwt
+import datetime
 
-# ROUTES
-from backend.routes import vehicle
-from backend.routes import training
-from backend.routes import simulation
-from backend.routes import assistant
-from backend.routes import analytics
-from backend.routes import report
-from backend.routes import predict
+router = APIRouter()
 
-# AUTH
-from backend.auth import auth
-
-# DATABASE
-from backend.database import engine, Base
-
-# FASTAPI APP
-app = FastAPI()
-
-# CREATE DATABASE TABLES
-Base.metadata.create_all(bind=engine)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+SECRET_KEY = "fleetai_secret_key"
 
 # =========================
-# ROUTERS
+# LOGIN MODEL
 # =========================
 
-app.include_router(vehicle.router)
+class LoginData(BaseModel):
 
-app.include_router(training.router)
-
-app.include_router(simulation.router)
-
-app.include_router(auth.router)
-
-app.include_router(assistant.router)
-
-app.include_router(analytics.router)
-
-app.include_router(report.router)
-
-app.include_router(predict.router)
+    username: str
+    password: str
 
 # =========================
-# HOME API
+# LOGIN API
 # =========================
 
-@app.get("/")
-def root():
+@router.post("/login")
+def login(data: LoginData):
+
+    if (
+        data.username == "admin"
+        and
+        data.password == "admin123"
+    ):
+
+        token = jwt.encode({
+
+            "user": data.username,
+
+            "exp":
+            datetime.datetime.utcnow()
+            +
+            datetime.timedelta(hours=5)
+
+        },
+        SECRET_KEY,
+        algorithm="HS256")
+
+        return {
+
+            "access_token": token
+
+        }
 
     return {
-        "message": "🚗 Autonomous Fleet AI Platform Running Successfully"
-    }
 
-from fastapi import Body
+        "message":
+        "Invalid Username or Password"
 
-trip_history = []
-
-@app.post("/save_trip")
-def save_trip(data: dict = Body(...)):
-
-    trip_history.append(data)
-
-    return {
-        "message": "Trip Saved Successfully"
     }
