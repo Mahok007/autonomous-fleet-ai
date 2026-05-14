@@ -610,7 +610,7 @@ async function findRoute() {
         getTrafficData(endLat, endLng);
 
     }, 15000);
-}
+
 
 // =========================
 // START REAL TRACKING
