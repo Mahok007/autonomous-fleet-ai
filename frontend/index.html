@@ -4,23 +4,33 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Autonomous Fleet AI Platform</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <!-- FONT -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <title>
+        Autonomous Fleet AI Platform
+    </title>
+
+    <!-- GOOGLE FONT -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+        rel="stylesheet">
 
     <!-- CHART -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- LEAFLET -->
+
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <!-- ROUTING -->
+
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
@@ -33,85 +43,180 @@
         }
 
         body{
+
             margin:0;
+
             font-family:'Poppins',sans-serif;
+
             background:#0f172a;
+
             color:white;
         }
 
         header{
+
             background:#1e293b;
+
             padding:20px;
+
             text-align:center;
-            font-size:28px;
+
+            font-size:30px;
+
             font-weight:bold;
+
             position:sticky;
+
             top:0;
-            z-index:999;
+
+            z-index:1000;
         }
 
         .container{
+
             padding:20px;
         }
 
         .card{
+
             background:#1e293b;
+
             padding:20px;
+
             border-radius:15px;
+
             margin-bottom:20px;
+
             box-shadow:0 0 15px rgba(0,0,0,0.4);
         }
 
         h2{
+
             color:#60a5fa;
         }
 
         input{
+
             width:100%;
+
             padding:12px;
+
             margin-top:10px;
+
             border:none;
+
             border-radius:8px;
+
+            outline:none;
+
             font-size:15px;
         }
 
         button{
+
             width:100%;
+
             padding:12px;
+
             margin-top:10px;
+
             border:none;
+
             border-radius:8px;
+
             background:#2563eb;
+
             color:white;
+
             font-size:15px;
+
             cursor:pointer;
+
             transition:0.3s;
         }
 
         button:hover{
+
             background:#1d4ed8;
+
+            transform:scale(1.01);
+        }
+
+        .green-btn{
+
+            background:#22c55e;
+        }
+
+        .red-btn{
+
+            background:#ef4444;
+        }
+
+        .purple-btn{
+
+            background:#8b5cf6;
         }
 
         #map{
-            height:500px;
+
             width:100%;
+
+            height:500px;
+
             margin-top:20px;
+
             border-radius:15px;
+
             overflow:hidden;
         }
 
-        canvas{
-            background:white;
-            border-radius:10px;
+        .status-box{
+
             margin-top:20px;
-            padding:10px;
+
+            background:#0f172a;
+
+            padding:15px;
+
+            border-radius:12px;
         }
 
-        .status-box{
+        .status-box p{
+
+            margin:10px 0;
+        }
+
+        canvas{
+
+            background:white;
+
+            border-radius:12px;
+
+            padding:10px;
+
             margin-top:20px;
-            background:#0f172a;
-            padding:15px;
-            border-radius:10px;
+        }
+
+        .grid{
+
+            display:grid;
+
+            grid-template-columns:
+            repeat(auto-fit,minmax(300px,1fr));
+
+            gap:20px;
+        }
+
+        .kpi{
+
+            text-align:center;
+        }
+
+        .kpi h1{
+
+            color:#22c55e;
+
+            font-size:40px;
         }
 
     </style>
@@ -128,16 +233,65 @@
 
 <div class="container">
 
-    <!-- ROUTE -->
+    <!-- KPI -->
+
+    <div class="grid">
+
+        <div class="card kpi">
+
+            <h2>Total Trips</h2>
+
+            <h1 id="tripCount">
+
+                0
+
+            </h1>
+
+        </div>
+
+        <div class="card kpi">
+
+            <h2>Brake Events</h2>
+
+            <h1 id="totalBrake">
+
+                0
+
+            </h1>
+
+        </div>
+
+        <div class="card kpi">
+
+            <h2>Acceleration Events</h2>
+
+            <h1 id="totalAccel">
+
+                0
+
+            </h1>
+
+        </div>
+
+    </div>
+
+    <!-- ROUTE SECTION -->
+
     <div class="card">
 
-        <h2>🗺 Smart Route Navigation</h2>
+        <h2>
 
-        <input id="startLocation"
-               placeholder="Enter Start Location">
+            🗺 Smart Route Navigation
 
-        <input id="endLocation"
-               placeholder="Enter Destination">
+        </h2>
+
+        <input
+            id="startLocation"
+            placeholder="Enter Start Location">
+
+        <input
+            id="endLocation"
+            placeholder="Enter Destination">
 
         <button onclick="findRoute()">
 
@@ -145,23 +299,42 @@
 
         </button>
 
-        <button onclick="startRealTracking()"
-                style="background:#22c55e;">
+        <button
+            class="green-btn"
+            onclick="startRealTracking()">
 
             ▶ Start Trip
 
         </button>
 
-        <button onclick="stopTrip()"
-                style="background:#ef4444;">
+        <button
+            class="red-btn"
+            onclick="stopTrip()">
 
             ⏹ End Trip
 
         </button>
 
+        <button
+            class="purple-btn"
+            onclick="downloadTripReport()">
+
+            📄 Download Trip Report
+
+        </button>
+
+        <!-- STATUS -->
+
         <div class="status-box">
 
+            <h3>
+
+                🚘 Live Trip Status
+
+            </h3>
+
             <p>
+
                 Trip Status:
                 <span id="tripStatus"
                       style="color:#ef4444;font-weight:bold;">
@@ -169,44 +342,89 @@
                     NOT STARTED
 
                 </span>
+
             </p>
 
             <p>
+
                 Current Speed:
-                <span id="currentSpeed">0</span> km/h
-            </p>
+                <span id="currentSpeed">
 
-            <p>
-                Brake Events:
-                <span id="totalBrake">0</span>
-            </p>
+                    0
 
-            <p>
-                Acceleration Events:
-                <span id="totalAccel">0</span>
+                </span>
+
+                km/h
+
             </p>
 
             <hr>
 
-            <h3>🚦 Live Traffic Status</h3>
+            <h3>
+
+                🚦 Traffic Status
+
+            </h3>
 
             <p>
+
                 Traffic Level:
                 <span id="trafficLevel">
 
                     Loading...
 
                 </span>
+
             </p>
 
             <p>
-                Estimated Delay:
-                <span id="trafficDelay">0</span> mins
+
+                Delay:
+                <span id="trafficDelay">
+
+                    0
+
+                </span>
+
+                mins
+
             </p>
 
         </div>
 
+        <!-- MAP -->
+
         <div id="map"></div>
+
+    </div>
+
+    <!-- CHARTS -->
+
+    <div class="grid">
+
+        <div class="card">
+
+            <h2>
+
+                📈 Speed Analytics
+
+            </h2>
+
+            <canvas id="speedChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h2>
+
+                🧠 Decision Distribution
+
+            </h2>
+
+            <canvas id="decisionChart"></canvas>
+
+        </div>
 
     </div>
 
@@ -215,92 +433,205 @@
 <script>
 
 let map;
+
 let routingControl;
+
 let vehicleMarker;
 
 let watchId = null;
+
 let tripData = [];
 
-let previousLat = null;
-let previousLng = null;
-let previousTime = null;
-let previousSpeed = 0;
+let speedChart;
 
-let totalBrakeEvents = 0;
-let totalAccelEvents = 0;
+let decisionChart;
+
+let speedLabels = [];
+
+let speedValues = [];
+
+let brakeEvents = 0;
+
+let accelEvents = 0;
+
+let previousLat = null;
+
+let previousLng = null;
+
+let previousTime = null;
+
+let previousSpeed = 0;
 
 let trafficInterval = null;
 
-// ======================
+// =====================
 // MAP INIT
-// ======================
+// =====================
 
-window.onload = function () {
+window.onload = function(){
 
-    map = L.map("map").setView([20.5937,78.9629],5);
+    map =
+    L.map("map")
+    .setView([20.5937,78.9629],5);
 
     L.tileLayer(
+
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
         {
             attribution:"© OpenStreetMap"
         }
+
     ).addTo(map);
 
-    let blueIcon = L.icon({
+    let icon = L.icon({
 
         iconUrl:
         "https://cdn-icons-png.flaticon.com/512/684/684908.png",
 
         iconSize:[35,35],
+
         iconAnchor:[17,35]
 
     });
 
-    vehicleMarker = L.marker(
+    vehicleMarker =
+    L.marker(
         [20.5937,78.9629],
-        {icon:blueIcon}
+        {icon:icon}
     ).addTo(map);
 
-    // ENTER KEY SEARCH
+    // ENTER KEY
 
     document
     .getElementById("endLocation")
-    .addEventListener("keypress",function(e){
+    .addEventListener(
 
-        if(e.key==="Enter"){
+        "keypress",
 
-            findRoute();
+        function(e){
+
+            if(e.key==="Enter"){
+
+                findRoute();
+
+            }
 
         }
 
-    });
+    );
+
+    createCharts();
 
 };
 
-// ======================
+// =====================
+// CREATE CHARTS
+// =====================
+
+function createCharts(){
+
+    // SPEED CHART
+
+    speedChart =
+    new Chart(
+
+        document
+        .getElementById("speedChart"),
+
+        {
+
+            type:"line",
+
+            data:{
+
+                labels:speedLabels,
+
+                datasets:[{
+
+                    label:"Speed",
+
+                    data:speedValues,
+
+                    borderColor:"#22c55e",
+
+                    fill:false
+
+                }]
+
+            }
+
+        }
+
+    );
+
+    // PIE CHART
+
+    decisionChart =
+    new Chart(
+
+        document
+        .getElementById("decisionChart"),
+
+        {
+
+            type:"pie",
+
+            data:{
+
+                labels:[
+                    "Brake",
+                    "Accelerate"
+                ],
+
+                datasets:[{
+
+                    data:[
+                        brakeEvents,
+                        accelEvents
+                    ],
+
+                    backgroundColor:[
+                        "#ef4444",
+                        "#22c55e"
+                    ]
+
+                }]
+
+            }
+
+        }
+
+    );
+
+}
+
+// =====================
 // FIND ROUTE
-// ======================
+// =====================
 
 async function findRoute(){
 
     let start =
-    document.getElementById(
-        "startLocation"
-    ).value;
+    document
+    .getElementById("startLocation")
+    .value;
 
     let end =
-    document.getElementById(
-        "endLocation"
-    ).value;
+    document
+    .getElementById("endLocation")
+    .value;
 
     if(!end){
 
         alert("Enter destination");
+
         return;
 
     }
 
     let startLat;
+
     let startLng;
 
     // CURRENT LOCATION
@@ -308,14 +639,22 @@ async function findRoute(){
     if(start.trim()===""){
 
         const position =
-        await new Promise((resolve,reject)=>{
+        await new Promise(
 
-            navigator.geolocation.getCurrentPosition(
-                resolve,
-                reject
-            );
+            (resolve,reject)=>{
 
-        });
+                navigator
+                .geolocation
+                .getCurrentPosition(
+
+                    resolve,
+                    reject
+
+                );
+
+            }
+
+        );
 
         startLat =
         position.coords.latitude;
@@ -331,7 +670,9 @@ async function findRoute(){
 
         let startRes =
         await fetch(
+
 `https://nominatim.openstreetmap.org/search?format=json&q=${start}`
+
         );
 
         let startData =
@@ -349,7 +690,9 @@ async function findRoute(){
 
     let endRes =
     await fetch(
+
 `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
+
     );
 
     let endData =
@@ -365,48 +708,62 @@ async function findRoute(){
 
     if(routingControl){
 
-        map.removeControl(routingControl);
+        map.removeControl(
+            routingControl
+        );
 
     }
 
-    // CREATE NEW ROUTE
+    // CREATE ROUTE
 
     routingControl =
     L.Routing.control({
 
         waypoints:[
 
-            L.latLng(startLat,startLng),
+            L.latLng(
+                startLat,
+                startLng
+            ),
 
-            L.latLng(endLat,endLng)
+            L.latLng(
+                endLat,
+                endLng
+            )
 
         ],
 
         routeWhileDragging:false,
+
         draggableWaypoints:false,
+
         addWaypoints:false
 
     }).addTo(map);
 
-    map.setView([startLat,startLng],13);
+    map.setView(
+        [startLat,startLng],
+        13
+    );
 
     vehicleMarker.setLatLng(
         [startLat,startLng]
     );
 
-    // AUTO OPEN MAP
+    // AUTO SCROLL
 
-    document
-    .getElementById("map")
-    .scrollIntoView({
+    window.scrollTo({
 
-        behavior:"smooth",
+        top:
+        document
+        .getElementById("map")
+        .offsetTop - 80,
 
-        block:"start"
+        behavior:"smooth"
 
     });
 
-    // FIX MOBILE RENDER
+    // FIX MAP SIZE
 
     setTimeout(()=>{
 
@@ -416,9 +773,12 @@ async function findRoute(){
 
     // TRAFFIC
 
-    getTrafficData(endLat,endLng);
+    getTrafficData(
+        endLat,
+        endLng
+    );
 
-    // AUTO REFRESH
+    // REFRESH TRAFFIC
 
     if(trafficInterval){
 
@@ -440,9 +800,9 @@ async function findRoute(){
 
 }
 
-// ======================
+// =====================
 // TRAFFIC API
-// ======================
+// =====================
 
 async function getTrafficData(lat,lng){
 
@@ -462,9 +822,9 @@ async function getTrafficData(lat,lng){
 
         if(!data.flowSegmentData){
 
-            document.getElementById(
-                "trafficLevel"
-            ).innerText="Unavailable";
+            document
+            .getElementById("trafficLevel")
+            .innerText="Unavailable";
 
             return;
 
@@ -493,13 +853,13 @@ async function getTrafficData(lat,lng){
 
         }
 
-        document.getElementById(
-            "trafficLevel"
-        ).innerText=traffic;
+        document
+        .getElementById("trafficLevel")
+        .innerText=traffic;
 
-        document.getElementById(
-            "trafficDelay"
-        ).innerText=Math.round(delay);
+        document
+        .getElementById("trafficDelay")
+        .innerText=Math.round(delay);
 
     }
 
@@ -507,43 +867,343 @@ async function getTrafficData(lat,lng){
 
         console.log(error);
 
-        document.getElementById(
-            "trafficLevel"
-        ).innerText="Error";
+        document
+        .getElementById("trafficLevel")
+        .innerText="Error";
 
     }
 
 }
 
-// ======================
+// =====================
 // START TRACKING
-// ======================
+// =====================
 
 function startRealTracking(){
 
-    document.getElementById(
-        "tripStatus"
-    ).innerText="TRIP STARTED";
+    document
+    .getElementById("tripStatus")
+    .innerText="TRIP STARTED";
 
-    document.getElementById(
-        "tripStatus"
-    ).style.color="#22c55e";
+    document
+    .getElementById("tripStatus")
+    .style.color="#22c55e";
+
+    if(watchId!==null){
+
+        navigator
+        .geolocation
+        .clearWatch(watchId);
+
+    }
+
+    watchId =
+    navigator
+    .geolocation
+    .watchPosition(
+
+        function(position){
+
+            let lat =
+            position.coords.latitude;
+
+            let lng =
+            position.coords.longitude;
+
+            let currentTime =
+            new Date().getTime();
+
+            vehicleMarker.setLatLng(
+                [lat,lng]
+            );
+
+            map.setView(
+                [lat,lng],
+                15
+            );
+
+            let speed = 0;
+
+            if(
+
+                previousLat!==null &&
+                previousLng!==null
+
+            ){
+
+                let distance =
+                getDistance(
+
+                    previousLat,
+                    previousLng,
+                    lat,
+                    lng
+
+                );
+
+                let timeDiff =
+                (currentTime-previousTime)/1000;
+
+                if(timeDiff>0){
+
+                    speed =
+                    (distance/timeDiff)*3600;
+
+                    speed =
+                    Math.round(speed);
+
+                }
+
+            }
+
+            if(speed>180){
+
+                speed=180;
+
+            }
+
+            // DECISION
+
+            if(speed>previousSpeed){
+
+                accelEvents++;
+
+            }
+
+            else{
+
+                brakeEvents++;
+
+            }
+
+            // UPDATE UI
+
+            document
+            .getElementById("currentSpeed")
+            .innerText=speed;
+
+            document
+            .getElementById("totalBrake")
+            .innerText=brakeEvents;
+
+            document
+            .getElementById("totalAccel")
+            .innerText=accelEvents;
+
+            // CHART
+
+            speedLabels.push(
+                new Date()
+                .toLocaleTimeString()
+            );
+
+            speedValues.push(speed);
+
+            if(speedLabels.length>15){
+
+                speedLabels.shift();
+
+                speedValues.shift();
+
+            }
+
+            speedChart.update();
+
+            decisionChart.data.datasets[0].data=[
+                brakeEvents,
+                accelEvents
+            ];
+
+            decisionChart.update();
+
+            // STORE
+
+            tripData.push({
+
+                latitude:lat,
+
+                longitude:lng,
+
+                speed:speed,
+
+                time:new Date()
+                .toLocaleTimeString()
+
+            });
+
+            previousLat = lat;
+
+            previousLng = lng;
+
+            previousTime = currentTime;
+
+            previousSpeed = speed;
+
+        },
+
+        function(error){
+
+            console.log(error);
+
+        },
+
+        {
+
+            enableHighAccuracy:true,
+
+            maximumAge:0,
+
+            timeout:5000
+
+        }
+
+    );
 
 }
 
-// ======================
-// STOP TRACKING
-// ======================
+// =====================
+// STOP TRIP
+// =====================
 
 function stopTrip(){
 
-    document.getElementById(
-        "tripStatus"
-    ).innerText="TRIP ENDED";
+    document
+    .getElementById("tripStatus")
+    .innerText="TRIP ENDED";
 
-    document.getElementById(
-        "tripStatus"
-    ).style.color="#ef4444";
+    document
+    .getElementById("tripStatus")
+    .style.color="#ef4444";
+
+    if(watchId!==null){
+
+        navigator
+        .geolocation
+        .clearWatch(watchId);
+
+        watchId = null;
+
+    }
+
+}
+
+// =====================
+// DOWNLOAD REPORT
+// =====================
+
+function downloadTripReport(){
+
+    let report =
+`AI Fleet Trip Report
+
+====================
+
+`;
+
+    tripData.forEach(
+
+        (item,index)=>{
+
+            report +=
+
+`
+Point ${index+1}
+
+Time: ${item.time}
+
+Latitude: ${item.latitude}
+
+Longitude: ${item.longitude}
+
+Speed: ${item.speed} km/h
+
+---------------------
+
+`;
+
+        }
+
+    );
+
+    const blob =
+    new Blob(
+
+        [report],
+
+        {
+            type:"text/plain"
+        }
+
+    );
+
+    const link =
+    document.createElement("a");
+
+    link.href =
+    URL.createObjectURL(blob);
+
+    link.download =
+    "trip_report.txt";
+
+    link.click();
+
+}
+
+// =====================
+// DISTANCE FORMULA
+// =====================
+
+function getDistance(
+
+    lat1,
+    lon1,
+    lat2,
+    lon2
+
+){
+
+    let R = 6371;
+
+    let dLat =
+    deg2rad(lat2-lat1);
+
+    let dLon =
+    deg2rad(lon2-lon1);
+
+    let a =
+
+    Math.sin(dLat/2) *
+    Math.sin(dLat/2)
+
+    +
+
+    Math.cos(deg2rad(lat1))
+
+    *
+
+    Math.cos(deg2rad(lat2))
+
+    *
+
+    Math.sin(dLon/2)
+
+    *
+
+    Math.sin(dLon/2);
+
+    let c =
+    2*Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1-a)
+    );
+
+    return R*c;
+
+}
+
+function deg2rad(deg){
+
+    return deg*(Math.PI/180);
 
 }
 

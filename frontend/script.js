@@ -1,3 +1,7 @@
+// =========================
+// GLOBAL VARIABLES
+// =========================
+
 let chart;
 let liveChart;
 let analyticsChart;
@@ -26,21 +30,33 @@ let trafficInterval = null;
 let totalBrakeEvents = 0;
 let totalAccelEvents = 0;
 
+const API_BASE =
+"https://autonomous-fleet-ai-1.onrender.com";
+
 // =========================
 // TRAIN MODEL
 // =========================
 
 function trainModel() {
 
-    fetch("https://autonomous-fleet-ai-1.onrender.com/train")
+    fetch(`${API_BASE}/train`)
 
     .then(res => res.json())
 
     .then(data => {
 
-        alert(data.message);
+        alert(data.message || "Model Trained");
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
+
+        alert("Training Failed");
 
     });
+
 }
 
 // =========================
@@ -50,27 +66,37 @@ function trainModel() {
 function predict() {
 
     let speed =
-        document.getElementById("speed").value;
+    document.getElementById("speed").value;
 
     let distance =
-        document.getElementById("distance").value;
+    document.getElementById("distance").value;
 
     let weather =
-        document.getElementById("weather").value;
+    document.getElementById("weather").value;
+
+    if (!speed || !distance || weather === "") {
+
+        alert("Enter all prediction values");
+
+        return;
+    }
 
     fetch(
-        `https://autonomous-fleet-ai-1.onrender.com/predict?speed=${speed}&distance=${distance}&weather=${weather}`
+`${API_BASE}/predict?speed=${speed}&distance=${distance}&weather=${weather}`
     )
 
     .then(res => res.json())
 
     .then(data => {
 
-        let brake = data.brake_prob;
-        let accel = data.accelerate_prob;
+        let brake =
+        Number(data.brake_prob || 0);
+
+        let accel =
+        Number(data.accelerate_prob || 0);
 
         document.getElementById("result").innerText =
-            `Brake: ${brake}% | Accelerate: ${accel}%`;
+        `Brake: ${brake}% | Accelerate: ${accel}%`;
 
         drawChart(brake, accel);
 
@@ -78,7 +104,16 @@ function predict() {
 
         moveCars(accel);
 
+    })
+
+    .catch(err => {
+
+        console.log(err);
+
+        alert("Prediction Failed");
+
     });
+
 }
 
 // =========================
@@ -87,8 +122,13 @@ function predict() {
 
 function drawChart(brake, accel) {
 
+    const canvas =
+    document.getElementById("chart");
+
+    if (!canvas) return;
+
     const ctx =
-        document.getElementById("chart").getContext("2d");
+    canvas.getContext("2d");
 
     if (chart) chart.destroy();
 
@@ -98,13 +138,20 @@ function drawChart(brake, accel) {
 
         data: {
 
-            labels: ["Brake", "Accelerate"],
+            labels: [
+                "Brake",
+                "Accelerate"
+            ],
 
             datasets: [{
 
-                label: "Decision Confidence (%)",
+                label:
+                "Decision Confidence (%)",
 
-                data: [brake, accel],
+                data: [
+                    brake,
+                    accel
+                ],
 
                 backgroundColor: [
                     "#ef4444",
@@ -137,8 +184,13 @@ function drawChart(brake, accel) {
 
 function updateLiveChart(brake, accel) {
 
+    const canvas =
+    document.getElementById("liveChart");
+
+    if (!canvas) return;
+
     const ctx =
-        document.getElementById("liveChart").getContext("2d");
+    canvas.getContext("2d");
 
     if (!liveChart) {
 
@@ -184,7 +236,7 @@ function updateLiveChart(brake, accel) {
     }
 
     let time =
-        new Date().toLocaleTimeString();
+    new Date().toLocaleTimeString();
 
     labels.push(time);
 
@@ -197,9 +249,11 @@ function updateLiveChart(brake, accel) {
         labels.shift();
         brakeData.shift();
         accelData.shift();
+
     }
 
     liveChart.update();
+
 }
 
 // =========================
@@ -209,23 +263,30 @@ function updateLiveChart(brake, accel) {
 function moveCars(accel) {
 
     let cars = [
+
         document.getElementById("car1"),
         document.getElementById("car2"),
         document.getElementById("car3")
+
     ];
 
     cars.forEach((car, index) => {
 
+        if (!car) return;
+
         let position =
-            parseInt(car.style.left) || 0;
+        parseInt(car.style.left) || 0;
 
         if (accel > 50) {
 
             position += 20 + (index * 10);
 
-        } else {
+        }
+
+        else {
 
             position -= 10;
+
         }
 
         if (position > 900)
@@ -234,38 +295,58 @@ function moveCars(accel) {
         if (position < 0)
             position = 0;
 
-        car.style.left = position + "px";
+        car.style.left =
+        position + "px";
+
     });
 
     let redLight =
-        document.getElementById("redLight");
+    document.getElementById("redLight");
 
     let yellowLight =
-        document.getElementById("yellowLight");
+    document.getElementById("yellowLight");
 
     let greenLight =
-        document.getElementById("greenLight");
+    document.getElementById("greenLight");
 
     let fleetStatus =
-        document.getElementById("fleetStatus");
+    document.getElementById("fleetStatus");
 
-    if (accel > 50) {
+    if (
+        redLight &&
+        yellowLight &&
+        greenLight
+    ) {
 
-        greenLight.style.opacity = 1;
-        yellowLight.style.opacity = 0.3;
-        redLight.style.opacity = 0.3;
+        if (accel > 50) {
 
-        fleetStatus.innerText =
-            "Vehicles accelerating smoothly";
+            greenLight.style.opacity = 1;
+            yellowLight.style.opacity = 0.3;
+            redLight.style.opacity = 0.3;
 
-    } else {
+            if (fleetStatus) {
 
-        redLight.style.opacity = 1;
-        yellowLight.style.opacity = 0.3;
-        greenLight.style.opacity = 0.3;
+                fleetStatus.innerText =
+                "Vehicles accelerating smoothly";
 
-        fleetStatus.innerText =
-            "AI applied braking system";
+            }
+
+        }
+
+        else {
+
+            redLight.style.opacity = 1;
+            yellowLight.style.opacity = 0.3;
+            greenLight.style.opacity = 0.3;
+
+            if (fleetStatus) {
+
+                fleetStatus.innerText =
+                "AI applied braking system";
+
+            }
+
+        }
     }
 }
 
@@ -275,93 +356,75 @@ function moveCars(accel) {
 
 window.onload = function () {
 
+    initializeMap();
+
+    loadData();
+
+    let endInput =
+    document.getElementById("endLocation");
+
+    if (endInput) {
+
+        endInput.addEventListener(
+            "keypress",
+            function (e) {
+
+                if (e.key === "Enter") {
+
+                    findRoute();
+
+                }
+
+            }
+        );
+    }
+
+};
+
+// =========================
+// INITIALIZE MAP
+// =========================
+
+function initializeMap() {
+
+    const mapDiv =
+    document.getElementById("map");
+
+    if (!mapDiv) return;
+
     map =
-        L.map("map").setView([20.5937, 78.9629], 5);
+    L.map("map").setView(
+        [20.5937, 78.9629],
+        5
+    );
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
-            attribution: "© OpenStreetMap"
+            attribution:
+            "© OpenStreetMap"
         }
     ).addTo(map);
 
-    let blueIcon = L.icon({
+    let blueIcon =
+    L.icon({
 
         iconUrl:
-            "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+"https://cdn-icons-png.flaticon.com/512/684/684908.png",
 
-        iconSize: [35,35],
+        iconSize: [35, 35],
 
-        iconAnchor: [17,35]
+        iconAnchor: [17, 35]
+
     });
 
     vehicleMarker =
-        L.marker(
-            [20.5937,78.9629],
-            { icon: blueIcon }
-        ).addTo(map);
+    L.marker(
+        [20.5937, 78.9629],
+        { icon: blueIcon }
+    ).addTo(map);
 
-    if (navigator.geolocation) {
-
-        navigator.geolocation.getCurrentPosition(
-
-            function(position){
-
-                let lat =
-                    position.coords.latitude;
-
-                let lng =
-                    position.coords.longitude;
-
-                map.setView([lat,lng],13);
-
-                vehicleMarker.setLatLng(
-                    [lat,lng]
-                );
-
-                getTrafficData(
-                    lat,
-                    lng
-                );
-
-            },
-
-            function(error){
-
-                console.log(error);
-
-            }
-
-        );
-    }
-
-    loadData();
-
-    // ENTER KEY ROUTE SEARCH
-
-    document
-    .getElementById(
-        "endLocation"
-    )
-    .addEventListener(
-
-        "keypress",
-
-        function(e){
-
-            if(
-                e.key==="Enter"
-            ){
-
-                findRoute();
-
-            }
-
-        }
-
-    );
-
-};
+}
 
 // =========================
 // FIND ROUTE
@@ -369,390 +432,234 @@ window.onload = function () {
 
 async function findRoute() {
 
-    let start =
+    try {
+
+        let start =
         document.getElementById(
             "startLocation"
         ).value;
 
-    let end =
+        let end =
         document.getElementById(
             "endLocation"
         ).value;
 
-    if (!end){
+        if (!end) {
+
+            alert("Enter destination");
+
+            return;
+
+        }
+
+        let startLat;
+        let startLng;
+
+        // CURRENT LOCATION
+
+        if (start.trim() === "") {
+
+            const position =
+            await new Promise(
+
+                (resolve, reject) => {
+
+                    navigator
+                    .geolocation
+                    .getCurrentPosition(
+                        resolve,
+                        reject
+                    );
+
+                }
+            );
+
+            startLat =
+            position.coords.latitude;
+
+            startLng =
+            position.coords.longitude;
+
+        }
+
+        // MANUAL LOCATION
+
+        else {
+
+            let startRes =
+            await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${start}`
+            );
+
+            let startData =
+            await startRes.json();
+
+            if (!startData.length) {
+
+                alert(
+                    "Invalid Start Location"
+                );
+
+                return;
+
+            }
+
+            startLat =
+            parseFloat(startData[0].lat);
+
+            startLng =
+            parseFloat(startData[0].lon);
+
+        }
+
+        // DESTINATION
+
+        let endRes =
+        await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${end}`
+        );
+
+        let endData =
+        await endRes.json();
+
+        if (!endData.length) {
+
+            alert(
+                "Invalid Destination"
+            );
+
+            return;
+
+        }
+
+        let endLat =
+        parseFloat(endData[0].lat);
+
+        let endLng =
+        parseFloat(endData[0].lon);
+
+        if (routingControl) {
+
+            map.removeControl(
+                routingControl
+            );
+
+        }
+
+        routingControl =
+        L.Routing.control({
+
+            waypoints: [
+
+                L.latLng(
+                    startLat,
+                    startLng
+                ),
+
+                L.latLng(
+                    endLat,
+                    endLng
+                )
+
+            ],
+
+            routeWhileDragging: false,
+
+            draggableWaypoints: false,
+
+            addWaypoints: false
+
+        }).addTo(map);
+
+        map.setView(
+            [startLat, startLng],
+            13
+        );
+
+        vehicleMarker.setLatLng(
+            [startLat, startLng]
+        );
+
+        getTrafficData(
+            endLat,
+            endLng
+        );
+
+    }
+
+    catch (err) {
+
+        console.log(err);
 
         alert(
-            "Enter destination"
+            "Route Loading Failed"
+        );
+
+    }
+
+}
+
+// =========================
+// START TRACKING
+// =========================
+
+function startRealTracking() {
+
+    if (!navigator.geolocation) {
+
+        alert(
+            "Geolocation Not Supported"
         );
 
         return;
     }
 
-    let startLat;
-    let startLng;
-
-    // CURRENT LOCATION
-
-    if(start.trim()===""){
-
-        if(navigator.geolocation){
-
-            const position =
-                await new Promise(
-
-                (resolve,reject)=>{
-
-                    navigator
-                    .geolocation
-                    .getCurrentPosition(
-
-                        resolve,
-                        reject
-
-                    );
-
-                });
-
-            startLat =
-                position.coords.latitude;
-
-            startLng =
-                position.coords.longitude;
-
-        }
-
-        else{
-
-            alert(
-                "Geolocation not supported"
-            );
-
-            return;
-        }
-
-    }
-
-    // MANUAL LOCATION
-
-    else{
-
-        let startRes =
-            await fetch(
-
-`https://nominatim.openstreetmap.org/search?format=json&q=${start}`
-
-            );
-
-        let startData =
-            await startRes.json();
-
-        startLat =
-            parseFloat(
-                startData[0].lat
-            );
-
-        startLng =
-            parseFloat(
-                startData[0].lon
-            );
-
-    }
-
-    // DESTINATION
-
-    let endRes =
-        await fetch(
-
-`https://nominatim.openstreetmap.org/search?format=json&q=${end}`
-
-        );
-
-    let endData =
-        await endRes.json();
-
-    let endLat =
-        parseFloat(
-            endData[0].lat
-        );
-
-    let endLng =
-        parseFloat(
-            endData[0].lon
-        );
-
-    if(routingControl){
-
-        map.removeControl(
-            routingControl
-        );
-
-    }
-
-    routingControl =
-    L.Routing.control({
-
-        waypoints:[
-
-            L.latLng(
-                startLat,
-                startLng
-            ),
-
-            L.latLng(
-                endLat,
-                endLng
-            )
-
-        ],
-
-        routeWhileDragging:false,
-
-        draggableWaypoints:false,
-
-        addWaypoints:false,
-
-        createMarker:
-        function(i,wp){
-
-            return L.marker(
-                wp.latLng
-            );
-
-        }
-
-    }).addTo(map);
-
-    map.setView(
-        [
-            startLat,
-            startLng
-        ],
-        13
-    );
-
-    vehicleMarker.setLatLng(
-        [
-            startLat,
-            startLng
-        ]
-    );
-
-    // AUTO SCROLL TO MAP
-
-    document
-    .getElementById(
-        "map"
-    )
-    .scrollIntoView({
-
-        behavior:"smooth",
-
-        block:"start"
-
-    });
-
-    // FIX MOBILE MAP
-
-    setTimeout(()=>{
-
-        map.invalidateSize();
-
-    },500);
-
-    // CLEAR OLD TRAFFIC
-
-    if(
-        trafficInterval
-    ){
-
-        clearInterval(
-            trafficInterval
-        );
-
-    }
-
-    // LOAD TRAFFIC
-
-    getTrafficData(
-        endLat,
-        endLng
-    );
-
-    // AUTO REFRESH TRAFFIC
-
-    trafficInterval =
-    setInterval(()=>{
-
-        getTrafficData(
-
-            endLat,
-            endLng
-
-        );
-
-    },15000);
-
-}
-
-// =========================
-// START REAL TRACKING
-// =========================
-
-function startRealTracking() {
-
-    if (watchId !== null) {
-
-        navigator.geolocation.clearWatch(watchId);
-    }
-
     tripStarted = true;
 
-    tripData = [];
-
-    totalBrakeEvents = 0;
-    totalAccelEvents = 0;
-
-    previousLat = null;
-    previousLng = null;
-    previousTime = null;
-    previousSpeed = 0;
+    document.getElementById(
+        "tripStatus"
+    ).innerText =
+    "TRIP STARTED";
 
     document.getElementById(
         "tripStatus"
-    ).innerText = "TRIP STARTED";
+    ).style.color =
+    "#22c55e";
 
-    document.getElementById(
-        "tripStatus"
-    ).style.color = "#22c55e";
+    watchId =
+    navigator.geolocation.watchPosition(
 
-    watchId = navigator.geolocation.watchPosition(
-
-        function(position) {
+        function(position){
 
             let lat =
-                position.coords.latitude;
+            position.coords.latitude;
 
             let lng =
-                position.coords.longitude;
+            position.coords.longitude;
 
-            let currentTime =
-                new Date().getTime();
+            vehicleMarker.setLatLng(
+                [lat,lng]
+            );
 
-            vehicleMarker.setLatLng([lat, lng]);
-
-            map.setView([lat, lng], 15);
-
-            getTrafficData(lat, lng);
-
-            let speed = 0;
-
-            if (
-                previousLat !== null &&
-                previousLng !== null
-            ) {
-
-                let distanceTravelled =
-                    getDistanceFromLatLonInKm(
-                        previousLat,
-                        previousLng,
-                        lat,
-                        lng
-                    );
-
-                let timeDiff =
-                    (currentTime - previousTime) / 1000;
-
-                if (timeDiff > 0) {
-
-                    speed =
-                        (distanceTravelled / timeDiff) * 3600;
-
-                    speed =
-                        Math.round(speed);
-                }
-            }
-
-            if (speed > 180) {
-
-                speed = 180;
-            }
-
-            let accel = 0;
-            let brake = 0;
-
-            if (speed > previousSpeed) {
-
-                accel =
-                    speed - previousSpeed;
-
-                totalAccelEvents++;
-
-            } else {
-
-                brake =
-                    previousSpeed - speed;
-
-                totalBrakeEvents++;
-            }
-
-            if (accel > 100)
-                accel = 100;
-
-            if (brake > 100)
-                brake = 100;
-
-            document.getElementById(
-                "currentSpeed"
-            ).innerText =
-                speed;
-
-            document.getElementById(
-                "totalBrake"
-            ).innerText =
-                totalBrakeEvents;
-
-            document.getElementById(
-                "totalAccel"
-            ).innerText =
-                totalAccelEvents;
-
-            updateLiveChart(brake, accel);
-
-            drawChart(brake, accel);
-
-            moveCars(accel);
-
-            tripData.push({
-
-                latitude: lat,
-                longitude: lng,
-                speed: speed,
-                brake: brake,
-                accel: accel,
-                time: new Date().toLocaleTimeString()
-
-            });
-
-            previousLat = lat;
-            previousLng = lng;
-            previousTime = currentTime;
-            previousSpeed = speed;
+            map.setView(
+                [lat,lng],
+                15
+            );
 
         },
 
-        function(error) {
+        function(error){
 
             console.log(error);
 
         },
 
         {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 5000
+            enableHighAccuracy:true
         }
 
     );
+
 }
 
 // =========================
@@ -761,140 +668,129 @@ function startRealTracking() {
 
 function stopTrip() {
 
-    localStorage.setItem(
-
-        "tripHistory",
-
-        JSON.stringify(tripData)
-
-    );
-
     if (watchId !== null) {
 
-        navigator.geolocation.clearWatch(watchId);
+        navigator
+        .geolocation
+        .clearWatch(watchId);
 
-        watchId = null;
     }
-
-    if (trafficInterval) {
-
-        clearInterval(trafficInterval);
-    }
-
-    tripStarted = false;
 
     document.getElementById(
         "tripStatus"
-    ).innerText = "TRIP ENDED";
+    ).innerText =
+    "TRIP ENDED";
 
     document.getElementById(
         "tripStatus"
-    ).style.color = "#ef4444";
-
-    alert("Trip Saved Successfully");
+    ).style.color =
+    "#ef4444";
 
 }
 
 // =========================
-// DOWNLOAD REPORT
+// TRAFFIC API
 // =========================
 
-function downloadTripReport() {
+async function getTrafficData(lat, lng) {
 
-    let report = `AI Fleet Trip Report\n\n`;
+    const apiKey =
+    "18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
 
-    report += `Total Points: ${tripData.length}\n\n`;
+    const url =
+`https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`;
 
-    tripData.forEach((item, index) => {
+    try {
 
-        report += `
-Point ${index + 1}
+        const response =
+        await fetch(url);
 
-Time: ${item.time}
-Speed: ${item.speed} km/h
-Brake: ${item.brake}
-Acceleration: ${item.accel}
-Latitude: ${item.latitude}
-Longitude: ${item.longitude}
+        const data =
+        await response.json();
 
-========================
-`;
-    });
+        if (!data.flowSegmentData)
+            return;
 
-    const blob = new Blob(
-        [report],
-        { type: "text/plain" }
-    );
+        let currentSpeed =
+        data.flowSegmentData.currentSpeed;
 
-    const link =
-        document.createElement("a");
+        let freeFlowSpeed =
+        data.flowSegmentData.freeFlowSpeed;
 
-    link.href =
-        URL.createObjectURL(blob);
-
-    link.download =
-        "trip_report.txt";
-
-    link.click();
-}
-
-// =========================
-// DISTANCE FORMULA
-// =========================
-
-function getDistanceFromLatLonInKm(
-    lat1,
-    lon1,
-    lat2,
-    lon2
-) {
-
-    let R = 6371;
-
-    let dLat =
-        deg2rad(lat2 - lat1);
-
-    let dLon =
-        deg2rad(lon2 - lon1);
-
-    let a =
-        Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
-
-        Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    let c =
-        2 * Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1 - a)
+        let delay =
+        Math.max(
+            0,
+            freeFlowSpeed -
+            currentSpeed
         );
 
-    return R * c;
-}
+        let traffic =
+        "Low";
 
-function deg2rad(deg) {
+        if (delay > 20) {
 
-    return deg * (Math.PI / 180);
+            traffic = "High";
+
+        }
+
+        else if (delay > 10) {
+
+            traffic = "Moderate";
+
+        }
+
+        let trafficLevel =
+        document.getElementById(
+            "trafficLevel"
+        );
+
+        let trafficDelay =
+        document.getElementById(
+            "trafficDelay"
+        );
+
+        if (trafficLevel) {
+
+            trafficLevel.innerText =
+            traffic;
+
+        }
+
+        if (trafficDelay) {
+
+            trafficDelay.innerText =
+            delay + " mins";
+
+        }
+
+    }
+
+    catch(error){
+
+        console.log(error);
+
+    }
+
 }
 
 // =========================
-// LOAD DATABASE
+// DATABASE LOAD
 // =========================
 
 function loadData() {
 
-    fetch("https://autonomous-fleet-ai-1.onrender.com/data")
+    fetch(`${API_BASE}/data`)
 
     .then(res => res.json())
 
     .then(data => {
 
         let table =
-            document.getElementById("dataTable");
+        document.getElementById(
+            "dataTable"
+        );
+
+        if (!table) return;
 
         table.innerHTML = "";
 
@@ -914,41 +810,245 @@ function loadData() {
 
             table.innerHTML += `
 
-                <tr>
+<tr>
 
-                    <td>${item.id}</td>
+<td>${item.id}</td>
+<td>${item.speed}</td>
+<td>${item.distance}</td>
+<td>${item.weather}</td>
+<td>${item.action}</td>
 
-                    <td>${item.speed}</td>
+<td>
+<button onclick="deleteData(${item.id})">
+Delete
+</button>
+</td>
 
-                    <td>${item.distance}</td>
-
-                    <td>${item.weather}</td>
-
-                    <td>${item.action}</td>
-
-                </tr>
-            `;
+</tr>
+`;
         });
 
-        document.getElementById("totalVehicles").innerText =
-            data.length;
-
-        document.getElementById("brakeCount").innerText =
-            brakeCount;
-
-        document.getElementById("accelCount").innerText =
-            accelCount;
-
-        document.getElementById("avgSpeed").innerText =
-            data.length > 0
-            ? (totalSpeed / data.length).toFixed(1)
-            : 0;
+        updateKPIs(
+            data,
+            totalSpeed,
+            brakeCount,
+            accelCount
+        );
 
         drawAnalytics(data);
 
-        drawDecisionChart(brakeCount, accelCount);
+        drawDecisionChart(
+            brakeCount,
+            accelCount
+        );
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
 
     });
+
+}
+
+// =========================
+// UPDATE KPIs
+// =========================
+
+function updateKPIs(
+    data,
+    totalSpeed,
+    brakeCount,
+    accelCount
+) {
+
+    let totalVehicles =
+    document.getElementById(
+        "totalVehicles"
+    );
+
+    let brakeEl =
+    document.getElementById(
+        "brakeCount"
+    );
+
+    let accelEl =
+    document.getElementById(
+        "accelCount"
+    );
+
+    let avgSpeed =
+    document.getElementById(
+        "avgSpeed"
+    );
+
+    if (totalVehicles)
+        totalVehicles.innerText =
+        data.length;
+
+    if (brakeEl)
+        brakeEl.innerText =
+        brakeCount;
+
+    if (accelEl)
+        accelEl.innerText =
+        accelCount;
+
+    if (avgSpeed)
+        avgSpeed.innerText =
+        data.length > 0
+        ? (
+            totalSpeed /
+            data.length
+        ).toFixed(1)
+        : 0;
+
+}
+
+// =========================
+// ADD DATA
+// =========================
+
+function addData() {
+
+    let speed =
+    document.getElementById(
+        "newSpeed"
+    ).value;
+
+    let distance =
+    document.getElementById(
+        "newDistance"
+    ).value;
+
+    let weather =
+    document.getElementById(
+        "newWeather"
+    ).value;
+
+    let action =
+    document.getElementById(
+        "newAction"
+    ).value;
+
+    fetch(`${API_BASE}/add_data`, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+            "application/json"
+        },
+
+        body: JSON.stringify({
+
+            speed,
+            distance,
+            weather,
+            action
+
+        })
+
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        alert(
+            data.message ||
+            "Data Added"
+        );
+
+        loadData();
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
+
+    });
+
+}
+
+// =========================
+// DELETE DATA
+// =========================
+
+function deleteData(id) {
+
+    fetch(`${API_BASE}/delete/${id}`, {
+
+        method: "DELETE"
+
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        alert(
+            data.message ||
+            "Deleted"
+        );
+
+        loadData();
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
+
+    });
+
+}
+
+// =========================
+// SEARCH TABLE
+// =========================
+
+function searchTable() {
+
+    let input =
+    document.getElementById(
+        "searchInput"
+    );
+
+    if (!input) return;
+
+    let filter =
+    input.value.toUpperCase();
+
+    let table =
+    document.getElementById(
+        "dataTable"
+    );
+
+    let tr =
+    table.getElementsByTagName("tr");
+
+    for (let i = 0; i < tr.length; i++) {
+
+        let td =
+        tr[i].getElementsByTagName("td")[0];
+
+        if (td) {
+
+            let txtValue =
+            td.textContent ||
+            td.innerText;
+
+            tr[i].style.display =
+            txtValue.toUpperCase()
+            .indexOf(filter) > -1
+            ? ""
+            : "none";
+
+        }
+    }
 }
 
 // =========================
@@ -957,35 +1057,42 @@ function loadData() {
 
 function drawAnalytics(data) {
 
+    const canvas =
+    document.getElementById(
+        "analyticsChart"
+    );
+
+    if (!canvas) return;
+
     const ctx =
-        document.getElementById("analyticsChart")
-        .getContext("2d");
+    canvas.getContext("2d");
 
     if (analyticsChart)
         analyticsChart.destroy();
 
-    analyticsChart = new Chart(ctx, {
+    analyticsChart =
+    new Chart(ctx, {
 
         type: "line",
 
         data: {
 
             labels:
-                data.map(d => d.id),
+            data.map(d => d.id),
 
-            datasets: [
+            datasets: [{
 
-                {
-                    label: "Speed",
+                label: "Speed",
 
-                    data:
-                        data.map(d => d.speed),
+                data:
+                data.map(d => d.speed),
 
-                    borderColor: "#3b82f6",
+                borderColor:
+                "#3b82f6",
 
-                    fill: false
-                }
-            ]
+                fill: false
+
+            }]
         }
     });
 }
@@ -994,16 +1101,26 @@ function drawAnalytics(data) {
 // PIE CHART
 // =========================
 
-function drawDecisionChart(brakeCount, accelCount) {
+function drawDecisionChart(
+    brakeCount,
+    accelCount
+) {
+
+    const canvas =
+    document.getElementById(
+        "decisionChart"
+    );
+
+    if (!canvas) return;
 
     const ctx =
-        document.getElementById("decisionChart")
-        .getContext("2d");
+    canvas.getContext("2d");
 
     if (decisionChart)
         decisionChart.destroy();
 
-    decisionChart = new Chart(ctx, {
+    decisionChart =
+    new Chart(ctx, {
 
         type: "pie",
 
@@ -1025,6 +1142,7 @@ function drawDecisionChart(brakeCount, accelCount) {
                     "#ef4444",
                     "#22c55e"
                 ]
+
             }]
         }
     });
@@ -1037,99 +1155,32 @@ function drawDecisionChart(brakeCount, accelCount) {
 function askAI() {
 
     let question =
-        document.getElementById("aiQuestion").value;
+    document.getElementById(
+        "aiQuestion"
+    ).value;
+
+    if (!question) return;
 
     fetch(
-        `https://autonomous-fleet-ai-1.onrender.com/ai_assistant?question=${question}`
+`${API_BASE}/ai_assistant?question=${encodeURIComponent(question)}`
     )
 
     .then(res => res.json())
 
     .then(data => {
 
-        document.getElementById("aiResponse")
-            .innerText = data.response;
+        document.getElementById(
+            "aiResponse"
+        ).innerText =
+        data.response ||
+        "No Response";
+
+    })
+
+    .catch(err => {
+
+        console.log(err);
 
     });
-}
 
-// =========================
-// TRAFFIC API
-// =========================
-
-async function getTrafficData(lat, lng) {
-
-    const apiKey =
-        "18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
-
-    const url =
-`https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`;
-
-    try {
-
-        const response =
-            await fetch(url);
-
-        const data =
-            await response.json();
-
-        if (!data.flowSegmentData) {
-
-            document.getElementById(
-                "trafficLevel"
-            ).innerText = "Unavailable";
-
-            document.getElementById(
-                "trafficDelay"
-            ).innerText = "0 mins";
-
-            return;
-        }
-
-        let currentSpeed =
-            data.flowSegmentData.currentSpeed;
-
-        let freeFlowSpeed =
-            data.flowSegmentData.freeFlowSpeed;
-
-        let delay =
-            Math.max(
-                0,
-                freeFlowSpeed - currentSpeed
-            );
-
-        let traffic =
-            "Low";
-
-        if (delay > 20) {
-
-            traffic = "High";
-
-        } else if (delay > 10) {
-
-            traffic = "Moderate";
-        }
-
-        document.getElementById(
-            "trafficLevel"
-        ).innerText = traffic;
-
-        document.getElementById(
-            "trafficDelay"
-        ).innerText = delay + " mins";
-
-    }
-
-    catch(error) {
-
-        console.log(error);
-
-        document.getElementById(
-            "trafficLevel"
-        ).innerText = "Error";
-
-        document.getElementById(
-            "trafficDelay"
-        ).innerText = "0 mins";
-    }
 }
