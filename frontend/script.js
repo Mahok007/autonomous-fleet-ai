@@ -658,19 +658,16 @@ async function startRealTracking(){
 
 document.getElementById(
 "tripStatus"
-).innerText="TRIP STARTED";
+).innerText=
+"STARTING...";
 
 document.getElementById(
 "tripStatus"
-).style.color="#22c55e";
-
-let customStart=
-document.getElementById(
-"startLocation"
-).value.trim();
+).style.color=
+"orange";
 
 
-// clear previous
+// CLEAR OLD
 
 if(watchId){
 
@@ -690,6 +687,11 @@ simulationInterval
 
 
 // CUSTOM START LOCATION
+
+let customStart=
+document.getElementById(
+"startLocation"
+).value.trim();
 
 if(customStart!==""){
 
@@ -719,6 +721,20 @@ parseFloat(data[0].lat);
 let lng=
 parseFloat(data[0].lon);
 
+
+// CHANGE STATUS IMMEDIATELY
+
+document.getElementById(
+"tripStatus"
+).innerText=
+"TRIP STARTED";
+
+document.getElementById(
+"tripStatus"
+).style.color=
+"#22c55e";
+
+
 vehicleMarker.setLatLng(
 [lat,lng]
 );
@@ -728,85 +744,92 @@ map.setView(
 15
 );
 
-let fakeSpeed=40;
+
+let speed=40;
 
 
 simulationInterval=
 setInterval(()=>{
 
-fakeSpeed +=
+speed +=
 Math.floor(
 Math.random()*10-5
 );
 
-if(fakeSpeed<30)
-fakeSpeed=30;
+if(speed<25)
+speed=25;
 
-if(fakeSpeed>90)
-fakeSpeed=90;
-
+if(speed>90)
+speed=90;
 
 document.getElementById(
 "currentSpeed"
 ).innerText=
-fakeSpeed;
+speed;
 
 
-lat+=0.0007;
+lat+=0.0005;
 
-lng+=0.0007;
+lng+=0.0005;
 
 vehicleMarker.setLatLng(
 [lat,lng]
 );
-
-tripData.push({
-
-lat,
-lng,
-speed:fakeSpeed,
-
-time:new Date()
-.toLocaleTimeString()
-
-});
 
 getTrafficData(
 lat,
 lng
 );
 
+tripData.push({
+
+lat,
+lng,
+speed
+
+});
+
 },3000);
-
-}
-
-catch(err){
-
-console.log(err);
-
-alert(
-"Custom location failed"
-);
-
-}
 
 return;
 
 }
 
+catch(error){
 
-// REAL GPS MODE
+console.log(error);
+
+}
+
+}
+
+
+// REAL GPS
+
+navigator.geolocation.getCurrentPosition(
+
+function(position){
+
+document.getElementById(
+"tripStatus"
+).innerText=
+"TRIP STARTED";
+
+document.getElementById(
+"tripStatus"
+).style.color=
+"#22c55e";
 
 watchId=
 navigator.geolocation.watchPosition(
 
-function(position){
+function(pos){
 
 let lat=
-position.coords.latitude;
+pos.coords.latitude;
 
 let lng=
-position.coords.longitude;
+pos.coords.longitude;
 
 vehicleMarker.setLatLng(
 [lat,lng]
@@ -818,8 +841,7 @@ map.setView(
 );
 
 let speed=
-position.coords.speed;
-
+pos.coords.speed;
 
 if(speed==null){
 
@@ -839,17 +861,6 @@ document.getElementById(
 ).innerText=
 speed;
 
-tripData.push({
-
-lat,
-lng,
-speed,
-
-time:new Date()
-.toLocaleTimeString()
-
-});
-
 getTrafficData(
 lat,
 lng
@@ -860,22 +871,28 @@ lng
 function(){
 
 alert(
-"Allow location permission"
+"Location denied"
+);
+
+}
+
 );
 
 },
 
-{
+function(){
 
-enableHighAccuracy:true,
-timeout:10000,
-maximumAge:0
+alert(
+"Allow location access"
+);
 
 }
 
 );
 
 }
+
+
 
 
 // =========================
