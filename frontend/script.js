@@ -478,19 +478,21 @@ async function findRoute(){
 
 try{
 
-let start =
+let start=
 document.getElementById(
 "startLocation"
-).value;
+).value.trim();
 
-let end =
+let end=
 document.getElementById(
 "endLocation"
-).value;
+).value.trim();
 
 if(!end){
 
-alert("Enter destination");
+alert(
+"Enter destination"
+);
 
 return;
 
@@ -500,84 +502,105 @@ let startLat;
 let startLng;
 
 
-// USE CURRENT LOCATION ONLY
-// IF START FIELD EMPTY
+// USE MANUAL LOCATION
+// IF ENTERED
 
-if(start.trim()===""){
+if(start!==""){
 
-const position =
+let startRes=
+await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(start)}`
+);
+
+let startData=
+await startRes.json();
+
+if(startData.length===0){
+
+alert(
+"Start location not found"
+);
+
+return;
+
+}
+
+startLat=
+parseFloat(
+startData[0].lat
+);
+
+startLng=
+parseFloat(
+startData[0].lon
+);
+
+}
+
+
+// USE CURRENT LOCATION
+// ONLY IF EMPTY
+
+else{
+
+const position=
 await new Promise(
+
 (resolve,reject)=>{
 
 navigator.geolocation
 .getCurrentPosition(
+
 resolve,
 reject
+
 );
 
-});
+}
 
-startLat =
+);
+
+startLat=
 position.coords.latitude;
 
-startLng =
+startLng=
 position.coords.longitude;
 
 }
 
 
-// USE MANUAL START LOCATION
+// DESTINATION
 
-else{
-
-let startRes =
+let endRes=
 await fetch(
-`https://nominatim.openstreetmap.org/search?format=json&q=${start}`
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end)}`
 );
 
-let startData =
-await startRes.json();
-
-if(startData.length===0){
-
-alert("Start location not found");
-
-return;
-
-}
-
-startLat =
-parseFloat(startData[0].lat);
-
-startLng =
-parseFloat(startData[0].lon);
-
-}
-
-
-
-let endRes =
-await fetch(
-`https://nominatim.openstreetmap.org/search?format=json&q=${end}`
-);
-
-let endData =
+let endData=
 await endRes.json();
 
 if(endData.length===0){
 
-alert("Destination not found");
+alert(
+"Destination not found"
+);
 
 return;
 
 }
 
-let endLat =
-parseFloat(endData[0].lat);
+let endLat=
+parseFloat(
+endData[0].lat
+);
 
-let endLng =
-parseFloat(endData[0].lon);
+let endLng=
+parseFloat(
+endData[0].lon
+);
 
+
+// REMOVE OLD ROUTE
 
 if(routingControl){
 
@@ -588,7 +611,9 @@ routingControl
 }
 
 
-routingControl =
+// NEW ROUTE
+
+routingControl=
 L.Routing.control({
 
 waypoints:[
@@ -614,16 +639,32 @@ addWaypoints:false
 }).addTo(map);
 
 
+// MOVE MARKER TO START
+
 vehicleMarker.setLatLng(
+
 [startLat,startLng]
+
 );
 
+
+// OPEN MAP AUTOMATICALLY
 
 map.setView(
+
 [startLat,startLng],
 13
+
 );
 
+setTimeout(()=>{
+
+map.invalidateSize();
+
+},500);
+
+
+// AUTO SCROLL
 
 document.getElementById(
 "map"
@@ -633,6 +674,8 @@ behavior:"smooth"
 
 });
 
+
+// LOAD TRAFFIC FAST
 
 getTrafficData(
 startLat,

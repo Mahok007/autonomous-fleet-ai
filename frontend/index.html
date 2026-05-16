@@ -517,34 +517,23 @@ map.setView([startLat,startLng],13);
 
 function startRealTracking(){
 
-navigator.geolocation.getCurrentPosition(
-
-function(position){
-
 document.getElementById(
 "tripStatus"
 ).innerText=
-"TRIP STARTED";
+"STARTING...";
 
 document.getElementById(
 "tripStatus"
 ).style.color=
-"#22c55e";
+"orange";
 
-let lat=
-position.coords.latitude;
+if(watchId){
 
-let lng=
-position.coords.longitude;
-
-vehicleMarker.setLatLng(
-[lat,lng]
+navigator.geolocation.clearWatch(
+watchId
 );
 
-map.setView(
-[lat,lng],
-15
-);
+}
 
 watchId=
 navigator.geolocation.watchPosition(
@@ -566,19 +555,48 @@ map.setView(
 15
 );
 
+document.getElementById(
+"tripStatus"
+).innerText=
+"TRIP STARTED";
+
+document.getElementById(
+"tripStatus"
+).style.color=
+"#22c55e";
+
+
+// REAL DEVICE SPEED
+
 let speed=
-Math.floor(
-Math.random()*120
+pos.coords.speed;
+
+if(speed==null){
+
+speed=0;
+
+}else{
+
+speed=
+Math.round(
+speed*3.6
 );
+
+}
 
 document.getElementById(
 "currentSpeed"
 ).innerText=
 speed;
 
+
+// LIVE CHART
+
 speedLabels.push(
+
 new Date()
 .toLocaleTimeString()
+
 );
 
 speedValues.push(
@@ -595,6 +613,9 @@ speedValues.shift();
 
 speedChart.update();
 
+
+// EVENT COUNTS
+
 if(speed>previousSpeed){
 
 accelEvents++;
@@ -607,8 +628,10 @@ brakeEvents++;
 
 decisionChart.data.datasets[0]
 .data=[
+
 brakeEvents,
 accelEvents
+
 ];
 
 decisionChart.update();
@@ -626,6 +649,9 @@ accelEvents;
 previousSpeed=
 speed;
 
+
+// SAVE TRIP
+
 tripData.push({
 
 lat,
@@ -633,6 +659,9 @@ lng,
 speed
 
 });
+
+
+// LIVE TRAFFIC
 
 getTrafficData(
 lat,
@@ -645,43 +674,54 @@ function(error){
 
 console.log(error);
 
-alert(
-"Location Error"
-);
+document.getElementById(
+"tripStatus"
+).innerText=
+"LOCATION DENIED";
+
+document.getElementById(
+"tripStatus"
+).style.color=
+"#ef4444";
 
 },
 
 {
 
-enableHighAccuracy:true
-
-}
-
-);
-
-},
-
-function(){
-
-alert(
-"Allow Location Permission"
-);
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:10000
 
 }
 
 );
 
 }
+
+
+// =========================
+// STOP TRIP
+// =========================
 
 function stopTrip(){
 
-document.getElementById("tripStatus").innerText =
+document.getElementById(
+"tripStatus"
+).innerText=
 "TRIP ENDED";
 
-document.getElementById("tripStatus").style.color =
+document.getElementById(
+"tripStatus"
+).style.color=
 "#ef4444";
 
-navigator.geolocation.clearWatch(watchId);
+if(watchId){
+
+navigator.geolocation.clearWatch(
+watchId
+);
+
+}
 
 }
 
