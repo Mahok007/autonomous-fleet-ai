@@ -466,60 +466,164 @@ backgroundColor:["#ef4444","#22c55e"]
 
 async function findRoute(){
 
+try{
+
+let start =
+document.getElementById(
+"startLocation"
+).value.trim();
+
 let end =
-document.getElementById("endLocation").value;
+document.getElementById(
+"endLocation"
+).value.trim();
 
 if(!end){
+
 alert("Enter destination");
+
 return;
+
 }
 
-const position =
-await new Promise((resolve,reject)=>{
-navigator.geolocation.getCurrentPosition(resolve,reject);
-});
+let startLat;
+let startLng;
 
-let startLat = position.coords.latitude;
-let startLng = position.coords.longitude;
 
-let endRes =
+// custom start
+
+if(start!==""){
+
+let startRes=
 await fetch(
-`https://nominatim.openstreetmap.org/search?format=json&q=${end}`
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(start)}`
 );
 
-let endData = await endRes.json();
+let startData=
+await startRes.json();
 
-let endLat = parseFloat(endData[0].lat);
-let endLng = parseFloat(endData[0].lon);
+if(startData.length===0){
 
-if(routingControl){
-map.removeControl(routingControl);
+alert(
+"Start location not found"
+);
+
+return;
+
 }
 
-routingControl = L.Routing.control({
+startLat=
+parseFloat(
+startData[0].lat
+);
+
+startLng=
+parseFloat(
+startData[0].lon
+);
+
+}
+
+else{
+
+const position=
+await new Promise(
+
+(resolve,reject)=>{
+
+navigator.geolocation
+.getCurrentPosition(
+resolve,
+reject
+);
+
+});
+
+startLat=
+position.coords.latitude;
+
+startLng=
+position.coords.longitude;
+
+}
+
+
+let endRes=
+await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end)}`
+);
+
+let endData=
+await endRes.json();
+
+let endLat=
+parseFloat(endData[0].lat);
+
+let endLng=
+parseFloat(endData[0].lon);
+
+
+if(routingControl){
+
+map.removeControl(
+routingControl
+);
+
+}
+
+routingControl=
+L.Routing.control({
 
 waypoints:[
-L.latLng(startLat,startLng),
-L.latLng(endLat,endLng)
+
+L.latLng(
+startLat,
+startLng
+),
+
+L.latLng(
+endLat,
+endLng
+)
+
 ],
 
 routeWhileDragging:false
 
 }).addTo(map);
 
-map.setView([startLat,startLng],13);
+vehicleMarker.setLatLng(
+[startLat,startLng]
+);
+
+map.setView(
+[startLat,startLng],
+14
+);
+
+document.getElementById(
+"map"
+).scrollIntoView({
+
+behavior:"smooth"
+
+});
+
+}
+catch(error){
+
+console.log(error);
+
+alert("Route Error");
 
 }
 
+}
 // =========================
 // START TRACKING
 // =========================
 
 function startRealTracking(){
-
-navigator.geolocation.getCurrentPosition(
-
-function(position){
 
 document.getElementById(
 "tripStatus"
@@ -531,20 +635,15 @@ document.getElementById(
 ).style.color=
 "#22c55e";
 
-let lat=
-position.coords.latitude;
 
-let lng=
-position.coords.longitude;
+if(watchId){
 
-vehicleMarker.setLatLng(
-[lat,lng]
+navigator.geolocation.clearWatch(
+watchId
 );
 
-map.setView(
-[lat,lng],
-15
-);
+}
+
 
 watchId=
 navigator.geolocation.watchPosition(
@@ -557,6 +656,7 @@ pos.coords.latitude;
 let lng=
 pos.coords.longitude;
 
+
 vehicleMarker.setLatLng(
 [lat,lng]
 );
@@ -566,15 +666,42 @@ map.setView(
 15
 );
 
+
+// REAL DEVICE SPEED
+
 let speed=
-Math.floor(
-Math.random()*120
+pos.coords.speed;
+
+
+// desktop browsers often return null
+
+if(
+speed===null ||
+speed===undefined
+){
+
+speed=0;
+
+}
+else{
+
+speed=
+Math.round(
+speed*3.6
 );
+
+}
+
+
+// SHOW SPEED
 
 document.getElementById(
 "currentSpeed"
 ).innerText=
 speed;
+
+
+// SPEED CHART
 
 speedLabels.push(
 new Date()
@@ -595,20 +722,26 @@ speedValues.shift();
 
 speedChart.update();
 
+
+// BRAKE / ACCEL EVENTS
+
 if(speed>previousSpeed){
 
 accelEvents++;
 
-}else{
+}
+else if(speed<previousSpeed){
 
 brakeEvents++;
 
 }
 
-decisionChart.data.datasets[0]
-.data=[
+
+decisionChart.data.datasets[0].data=[
+
 brakeEvents,
 accelEvents
+
 ];
 
 decisionChart.update();
@@ -626,18 +759,27 @@ accelEvents;
 previousSpeed=
 speed;
 
-tripData.push({
 
-lat,
-lng,
-speed
-
-});
+// TRAFFIC
 
 getTrafficData(
 lat,
 lng
 );
+
+
+// SAVE
+
+tripData.push({
+
+lat,
+lng,
+speed,
+
+time:new Date()
+.toLocaleTimeString()
+
+});
 
 },
 
@@ -646,45 +788,49 @@ function(error){
 console.log(error);
 
 alert(
-"Location Error"
+"Allow Location Permission"
 );
 
 },
 
 {
 
-enableHighAccuracy:true
+enableHighAccuracy:true,
 
-}
+timeout:10000,
 
-);
-
-},
-
-function(){
-
-alert(
-"Allow Location Permission"
-);
+maximumAge:0
 
 }
 
 );
 
 }
+
+
 
 function stopTrip(){
 
-document.getElementById("tripStatus").innerText =
+document.getElementById(
+"tripStatus"
+).innerText=
 "TRIP ENDED";
 
-document.getElementById("tripStatus").style.color =
+document.getElementById(
+"tripStatus"
+).style.color=
 "#ef4444";
 
-navigator.geolocation.clearWatch(watchId);
+
+if(watchId){
+
+navigator.geolocation.clearWatch(
+watchId
+);
 
 }
 
+}
 // REPORT
 
 function downloadTripReport(){
