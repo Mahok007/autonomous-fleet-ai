@@ -690,14 +690,43 @@ function startRealTracking(){
 
     watchId = navigator.geolocation.watchPosition(
 
-    function(position){
+    async function(position){
 
-        let lat =
-        position.coords.latitude;
+       let lat;
+let lng;
 
-        let lng =
-        position.coords.longitude;
+// USE ROUTE START IF ENTERED
 
+let customStart =
+document.getElementById(
+"startLocation"
+).value;
+
+if(customStart.trim()!==""){
+
+let result =
+await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${customStart}`
+);
+
+let data =
+await result.json();
+
+lat =
+parseFloat(data[0].lat);
+
+lng =
+parseFloat(data[0].lon);
+
+}else{
+
+lat =
+position.coords.latitude;
+
+lng =
+position.coords.longitude;
+
+}
         // NOW TRIP STARTED
 
         document.getElementById(
@@ -722,16 +751,14 @@ function startRealTracking(){
 let speed =
 position.coords.speed;
 
-if(speed===null || speed===undefined){
+if(speed==null){
 
 speed=0;
 
 }else{
 
 speed =
-Math.round(
-speed*3.6
-);
+Math.round(speed*3.6);
 
 }
 
