@@ -473,7 +473,6 @@ function moveCars(accel){
 // =========================
 // FIND ROUTE
 // =========================
-
 async function findRoute(){
 
 try{
@@ -490,32 +489,28 @@ document.getElementById(
 
 if(!end){
 
-alert(
-"Enter destination"
-);
+alert("Enter destination");
 
 return;
 
 }
 
-let startLat;
-let startLng;
+let startLat,startLng;
 
 
-// USE MANUAL LOCATION
-// IF ENTERED
+// CUSTOM START
 
-if(start!==""){
+if(start !== ""){
 
-let startRes=
+let response=
 await fetch(
 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(start)}`
 );
 
-let startData=
-await startRes.json();
+let data=
+await response.json();
 
-if(startData.length===0){
+if(data.length===0){
 
 alert(
 "Start location not found"
@@ -526,34 +521,23 @@ return;
 }
 
 startLat=
-parseFloat(
-startData[0].lat
-);
+parseFloat(data[0].lat);
 
 startLng=
-parseFloat(
-startData[0].lon
-);
+parseFloat(data[0].lon);
 
 }
 
-
-// USE CURRENT LOCATION
-// ONLY IF EMPTY
-
 else{
 
-const position=
+const pos=
 await new Promise(
 
 (resolve,reject)=>{
 
-navigator.geolocation
-.getCurrentPosition(
-
+navigator.geolocation.getCurrentPosition(
 resolve,
 reject
-
 );
 
 }
@@ -561,46 +545,30 @@ reject
 );
 
 startLat=
-position.coords.latitude;
+pos.coords.latitude;
 
 startLng=
-position.coords.longitude;
+pos.coords.longitude;
 
 }
 
 
 // DESTINATION
 
-let endRes=
+let endResponse=
 await fetch(
 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end)}`
 );
 
 let endData=
-await endRes.json();
-
-if(endData.length===0){
-
-alert(
-"Destination not found"
-);
-
-return;
-
-}
+await endResponse.json();
 
 let endLat=
-parseFloat(
-endData[0].lat
-);
+parseFloat(endData[0].lat);
 
 let endLng=
-parseFloat(
-endData[0].lon
-);
+parseFloat(endData[0].lon);
 
-
-// REMOVE OLD ROUTE
 
 if(routingControl){
 
@@ -609,9 +577,6 @@ routingControl
 );
 
 }
-
-
-// NEW ROUTE
 
 routingControl=
 L.Routing.control({
@@ -630,31 +595,18 @@ endLng
 
 ],
 
-routeWhileDragging:false,
-
-draggableWaypoints:false,
-
-addWaypoints:false
+routeWhileDragging:false
 
 }).addTo(map);
 
 
-// MOVE MARKER TO START
-
 vehicleMarker.setLatLng(
-
 [startLat,startLng]
-
 );
 
-
-// OPEN MAP AUTOMATICALLY
-
 map.setView(
-
 [startLat,startLng],
-13
-
+14
 );
 
 setTimeout(()=>{
@@ -664,7 +616,15 @@ map.invalidateSize();
 },500);
 
 
-// AUTO SCROLL
+// LOAD TRAFFIC
+
+getTrafficData(
+startLat,
+startLng
+);
+
+
+// OPEN MAP AUTOMATICALLY
 
 document.getElementById(
 "map"
@@ -674,22 +634,14 @@ behavior:"smooth"
 
 });
 
-
-// LOAD TRAFFIC FAST
-
-getTrafficData(
-startLat,
-startLng
-);
-
 }
 
-catch(err){
+catch(error){
 
-console.log(err);
+console.log(error);
 
 alert(
-"Route Failed"
+"Route Error"
 );
 
 }
@@ -1307,152 +1259,163 @@ function askAI(){
 
 async function getTrafficData(lat,lng){
 
-    const apiKey =
-    "18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
+let trafficLevel=
+document.getElementById(
+"trafficLevel"
+);
 
-    const url =
+let trafficDelay=
+document.getElementById(
+"trafficDelay"
+);
+
+
+// SHOW LOADING IMMEDIATELY
+
+if(trafficLevel){
+
+trafficLevel.innerText=
+"Loading...";
+
+}
+
+try{
+
+const apiKey=
+"18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
+
+const url=
 `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`;
 
-    try{
+const response=
+await fetch(url);
 
-        const response =
-        await fetch(url);
+const data=
+await response.json();
 
-        const data =
-        await response.json();
+console.log(data);
 
-        if(!data.flowSegmentData){
 
-            let trafficLevel =
-            document.getElementById(
-            "trafficLevel"
-            );
+// NO DATA
 
-            if(trafficLevel){
+if(
+!data ||
+!data.flowSegmentData
+){
 
-                trafficLevel.innerText =
-                "No Data";
+trafficLevel.innerText=
+"Low";
 
-            }
+trafficDelay.innerText=
+"0 mins";
 
-            return;
+return;
 
-        }
+}
 
-        let currentSpeed =
-        data.flowSegmentData.currentSpeed;
 
-        let freeFlowSpeed =
-        data.flowSegmentData.freeFlowSpeed;
+let currentSpeed=
+data.flowSegmentData.currentSpeed || 0;
 
-        let delay =
-        Math.max(
-            0,
-            freeFlowSpeed-currentSpeed
-        );
+let freeFlowSpeed=
+data.flowSegmentData.freeFlowSpeed || 0;
 
-        let traffic="Low";
 
-        let color="green";
+let delay=
+Math.max(
+0,
+freeFlowSpeed-currentSpeed
+);
 
-        if(delay>20){
 
-            traffic="High";
+let traffic=
+"Low";
 
-            color="red";
+let color=
+"green";
 
-        }
 
-        else if(delay>10){
+if(delay>20){
 
-            traffic="Moderate";
+traffic=
+"High";
 
-            color="orange";
+color=
+"red";
 
-        }
+}
 
-        let trafficLevel =
-        document.getElementById(
-        "trafficLevel"
-        );
+else if(delay>10){
 
-        let trafficDelay =
-        document.getElementById(
-        "trafficDelay"
-        );
+traffic=
+"Moderate";
 
-        if(trafficLevel){
+color=
+"orange";
 
-            trafficLevel.innerText =
-            traffic;
+}
 
-        }
 
-        if(trafficDelay){
+// UPDATE UI
 
-            trafficDelay.innerText =
-            delay + " mins";
+trafficLevel.innerText=
+traffic;
 
-        }
+trafficDelay.innerText=
+delay+" mins";
 
-        if(trafficCircle){
 
-            map.removeLayer(
-            trafficCircle
-            );
+// REMOVE OLD CIRCLE
 
-        }
+if(trafficCircle){
 
-        trafficCircle =
-        L.circle(
+map.removeLayer(
+trafficCircle
+);
 
-            [lat,lng],
+}
 
-            {
 
-                radius:300,
+// CREATE NEW TRAFFIC ZONE
 
-                color:color,
+trafficCircle=
+L.circle(
 
-                fillColor:color,
+[lat,lng],
 
-                fillOpacity:0.35
+{
 
-            }
+radius:300,
 
-        ).addTo(map);
+color:color,
 
-    }
+fillColor:color,
 
-    catch(error){
+fillOpacity:0.35
 
-        console.log(error);
+}
 
-        let trafficLevel =
-        document.getElementById(
-        "trafficLevel"
-        );
+).addTo(map);
 
-        let trafficDelay =
-        document.getElementById(
-        "trafficDelay"
-        );
+}
 
-        if(trafficLevel){
+catch(error){
 
-            trafficLevel.innerText =
-            "API Error";
+console.log(
+"Traffic Error:",
+error
+);
 
-        }
 
-        if(trafficDelay){
+// FALLBACK
 
-            trafficDelay.innerText =
-            "0";
+trafficLevel.innerText=
+"Low";
 
-        }
+trafficDelay.innerText=
+"0 mins";
 
-    }
+}
 
 }
 
