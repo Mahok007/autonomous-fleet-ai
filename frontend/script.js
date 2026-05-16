@@ -729,6 +729,10 @@ getTrafficData(
 lat,
 lng
 );
+getWeather(
+lat,
+lng
+);
 
 
 document.getElementById(
@@ -923,15 +927,11 @@ navigator.geolocation.clearWatch(
 watchId
 );
 
-}
-
-if(simulationInterval){
-
-clearInterval(
-simulationInterval
-);
+watchId=null;
 
 }
+
+tripStarted=false;
 
 document.getElementById(
 "tripStatus"
