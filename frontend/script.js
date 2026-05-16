@@ -1464,3 +1464,108 @@ window.location.href =
 "login.html";
 
 }
+async function getWeather(lat,lng){
+
+try{
+
+const apiKey=
+"abcd025b875b6e22fcf6b7c846188305";
+
+const response=
+await fetch(
+
+`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&appid=${apiKey}`
+
+);
+
+const data=
+await response.json();
+
+document.getElementById(
+"weatherCondition"
+).innerText=
+data.weather[0].main;
+
+document.getElementById(
+"weatherTemp"
+).innerText=
+Math.round(
+data.main.temp
+);
+
+}
+
+catch(error){
+
+console.log(error);
+
+document.getElementById(
+"weatherCondition"
+).innerText=
+"Unavailable";
+
+}
+}
+function startVoice(){
+
+const recognition=
+new webkitSpeechRecognition();
+
+recognition.lang=
+"en-US";
+
+recognition.start();
+
+recognition.onresult=
+function(event){
+
+let text=
+event.results[0][0]
+.transcript;
+
+document.getElementById(
+"aiQuestion"
+).value=
+text;
+
+
+// smart commands
+
+if(
+text.toLowerCase()
+.includes("start trip")
+){
+
+startRealTracking();
+
+return;
+
+}
+
+if(
+text.toLowerCase()
+.includes("stop trip")
+){
+
+stopTrip();
+
+return;
+
+}
+
+if(
+text.toLowerCase()
+.includes("find route")
+){
+
+findRoute();
+
+return;
+
+}
+
+askAI();
+
+};
+
+}

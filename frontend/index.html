@@ -290,11 +290,27 @@ Delay:
 mins
 </p>
 
+<hr>
+
+<h3>🌦 Live Weather</h3>
+
+<p>
+Condition:
+<span id="weatherCondition">
+Loading...
+</span>
+</p>
+
+<p>
+Temperature:
+<span id="weatherTemp">
+0
+</span> °C
+</p>
+
 </div>
 
 <div id="map"></div>
-
-</div>
 
 <!-- CHARTS -->
 
@@ -329,6 +345,10 @@ placeholder="Ask AI something...">
 
 <button onclick="askAI()">
 Ask AI
+</button>
+
+<button onclick="startVoice()">
+🎤 Voice Command
 </button>
 
 <div id="aiResponse">
