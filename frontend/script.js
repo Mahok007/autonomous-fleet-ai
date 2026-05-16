@@ -703,13 +703,11 @@ function startRealTracking(){
 
 document.getElementById(
 "tripStatus"
-).innerText=
-"TRIP STARTED";
+).innerText="TRIP STARTED";
 
 document.getElementById(
 "tripStatus"
-).style.color=
-"#22c55e";
+).style.color="#22c55e";
 
 let customStart=
 document.getElementById(
@@ -717,7 +715,7 @@ document.getElementById(
 ).value.trim();
 
 
-// CUSTOM LOCATION MODE
+// ---------- CUSTOM LOCATION MODE ----------
 
 if(customStart!==""){
 
@@ -731,9 +729,7 @@ fetch(
 
 if(data.length===0){
 
-alert(
-"Start location not found"
-);
+alert("Location not found");
 
 return;
 
@@ -746,73 +742,61 @@ let lng=
 parseFloat(data[0].lon);
 
 
-// MOVE VEHICLE
+// move marker
+
+vehicleMarker.setLatLng([lat,lng]);
+
+map.setView([lat,lng],15);
+
+
+// simulate movement
+
+let fakeSpeed=30;
+
+setInterval(()=>{
+
+fakeSpeed += Math.floor(
+(Math.random()*10)-5
+);
+
+if(fakeSpeed<20)
+fakeSpeed=20;
+
+if(fakeSpeed>80)
+fakeSpeed=80;
+
+document.getElementById(
+"currentSpeed"
+).innerText=
+fakeSpeed;
+
+
+// shift marker slightly
+
+lat += 0.0005;
+
+lng += 0.0005;
 
 vehicleMarker.setLatLng(
 [lat,lng]
 );
 
-map.setView(
-[lat,lng],
-15
-);
+tripData.push({
 
+lat,
+lng,
+speed:fakeSpeed,
+time:new Date()
+.toLocaleTimeString()
 
-// FIXED SPEED FOR VIRTUAL ROUTE
-
-let speed=45;
-
-document.getElementById(
-"currentSpeed"
-).innerText=
-speed;
-
-
-// EVENTS
-
-if(speed>previousSpeed){
-
-totalAccelEvents++;
-
-}else{
-
-totalBrakeEvents++;
-
-}
-
-document.getElementById(
-"totalBrake"
-).innerText=
-totalBrakeEvents;
-
-document.getElementById(
-"totalAccel"
-).innerText=
-totalAccelEvents;
-
-previousSpeed=speed;
-
-
-// TRAFFIC
+});
 
 getTrafficData(
 lat,
 lng
 );
 
-
-// SAVE
-
-tripData.push({
-
-lat,
-lng,
-speed,
-
-time:new Date()
-.toLocaleTimeString()
-
-});
+},3000);
 
 });
 
@@ -822,7 +806,7 @@ return;
 
 
 
-// REAL GPS MODE
+// ---------- REAL GPS MODE ----------
 
 if(watchId!==null){
 
@@ -853,19 +837,27 @@ map.setView(
 );
 
 
-// REAL DEVICE SPEED
+// REAL SPEED
 
 let speed=
 position.coords.speed;
 
-if(speed==null){
+
+// if browser gives null
+
+if(
+speed===null ||
+speed===undefined
+){
 
 speed=0;
 
 }else{
 
 speed=
-Math.round(speed*3.6);
+Math.round(
+speed*3.6
+);
 
 }
 
@@ -875,7 +867,7 @@ document.getElementById(
 speed;
 
 
-// EVENTS
+// events
 
 if(speed>previousSpeed){
 
@@ -899,28 +891,29 @@ totalAccelEvents;
 
 previousSpeed=speed;
 
-getTrafficData(
-lat,
-lng
-);
-
 tripData.push({
 
 lat,
 lng,
 speed,
-
 time:new Date()
 .toLocaleTimeString()
 
 });
 
+getTrafficData(
+lat,
+lng
+);
+
 },
 
-function(){
+function(error){
+
+console.log(error);
 
 alert(
-"Allow location permission"
+"Allow Location Permission"
 );
 
 },
@@ -936,7 +929,6 @@ maximumAge:0
 );
 
 }
-
 // =========================
 // STOP TRIP
 // =========================
