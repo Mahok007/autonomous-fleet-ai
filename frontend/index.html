@@ -1170,8 +1170,19 @@ document.getElementById(
 
 }
 
-</script>
 
+// LOGOUT
+
+function logout(){
+
+localStorage.removeItem(
+"token"
+);
+
+window.location.href=
+"login.html";
+
+}
 </script>
 
 </body>
