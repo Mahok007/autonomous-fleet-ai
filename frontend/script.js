@@ -699,62 +699,117 @@ alert(
 // START TRACKING
 // =========================
 
+
 function startRealTracking(){
 
-    if(!navigator.geolocation){
+if(!navigator.geolocation){
 
-        alert("Geolocation Not Supported");
+alert("Geolocation Not Supported");
 
-        return;
+return;
 
-    }
-
-    // CHANGE STATUS IMMEDIATELY
-
-    document.getElementById(
-        "tripStatus"
-    ).innerText =
-    "STARTING...";
-
-    document.getElementById(
-        "tripStatus"
-    ).style.color =
-    "orange";
-
-    // CLEAR OLD WATCH
-
-    if(watchId!==null){
-
-        navigator.geolocation.clearWatch(
-            watchId
-        );
-
-    }
-
-    watchId = navigator.geolocation.watchPosition(
-
-    async function(position){
-
-       let lat;
-let lng;
-
-let lat =
-position.coords.latitude;
-
-let lng =
-position.coords.longitude;
-
-
-// NOW TRIP STARTED
+}
 
 document.getElementById(
 "tripStatus"
-).innerText =
+).innerText=
+"STARTING...";
+
+document.getElementById(
+"tripStatus"
+).style.color=
+"orange";
+
+
+if(watchId!==null){
+
+navigator.geolocation.clearWatch(
+watchId
+);
+
+}
+
+watchId=
+navigator.geolocation.watchPosition(
+
+async function(position){
+
+let lat;
+let lng;
+
+
+// CUSTOM START LOCATION
+
+let customStart=
+document.getElementById(
+"startLocation"
+).value.trim();
+
+if(customStart!==""){
+
+try{
+
+let result=
+await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(customStart)}`
+);
+
+let data=
+await result.json();
+
+if(data.length>0){
+
+lat=
+parseFloat(data[0].lat);
+
+lng=
+parseFloat(data[0].lon);
+
+}else{
+
+lat=
+position.coords.latitude;
+
+lng=
+position.coords.longitude;
+
+}
+
+}
+
+catch{
+
+lat=
+position.coords.latitude;
+
+lng=
+position.coords.longitude;
+
+}
+
+}
+
+else{
+
+lat=
+position.coords.latitude;
+
+lng=
+position.coords.longitude;
+
+}
+
+
+// TRIP STATUS
+
+document.getElementById(
+"tripStatus"
+).innerText=
 "TRIP STARTED";
 
 document.getElementById(
 "tripStatus"
-).style.color =
+).style.color=
 "#22c55e";
 
 vehicleMarker.setLatLng(
@@ -763,28 +818,29 @@ vehicleMarker.setLatLng(
 
 map.setView(
 [lat,lng],
-15);
+15
+);
 
 
-// REAL DEVICE SPEED
+// REAL SPEED
 
-let speed =
+let speed=
 position.coords.speed;
 
-if(speed==null){
+if(speed===null){
 
 speed=0;
 
 }else{
 
-speed =
+speed=
 Math.round(speed*3.6);
 
 }
 
 document.getElementById(
 "currentSpeed"
-).innerText =
+).innerText=
 speed;
 
 
@@ -802,16 +858,15 @@ totalBrakeEvents++;
 
 document.getElementById(
 "totalBrake"
-).innerText =
+).innerText=
 totalBrakeEvents;
 
 document.getElementById(
 "totalAccel"
-).innerText =
+).innerText=
 totalAccelEvents;
 
-previousSpeed =
-speed;
+previousSpeed=speed;
 
 
 // LIVE TRAFFIC
@@ -844,12 +899,12 @@ console.log(error);
 
 document.getElementById(
 "tripStatus"
-).innerText =
+).innerText=
 "LOCATION DENIED";
 
 document.getElementById(
 "tripStatus"
-).style.color =
+).style.color=
 "red";
 
 alert(
