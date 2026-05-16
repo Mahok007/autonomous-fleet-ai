@@ -476,143 +476,180 @@ function moveCars(accel){
 
 async function findRoute(){
 
-    try{
+try{
 
-        let start =
-        document.getElementById(
-            "startLocation"
-        ).value;
+let start =
+document.getElementById(
+"startLocation"
+).value;
 
-        let end =
-        document.getElementById(
-            "endLocation"
-        ).value;
+let end =
+document.getElementById(
+"endLocation"
+).value;
 
-        if(!end){
+if(!end){
 
-            alert("Enter destination");
+alert("Enter destination");
 
-            return;
+return;
 
-        }
+}
 
-        let startLat;
-        let startLng;
+let startLat;
+let startLng;
 
-        if(start.trim()===""){
 
-            const position =
-            await new Promise(
+// USE CURRENT LOCATION ONLY
+// IF START FIELD EMPTY
 
-                (resolve,reject)=>{
+if(start.trim()===""){
 
-                    navigator
-                    .geolocation
-                    .getCurrentPosition(
-                        resolve,
-                        reject
-                    );
+const position =
+await new Promise(
+(resolve,reject)=>{
 
-                }
+navigator.geolocation
+.getCurrentPosition(
+resolve,
+reject
+);
 
-            );
+});
 
-            startLat =
-            position.coords.latitude;
+startLat =
+position.coords.latitude;
 
-            startLng =
-            position.coords.longitude;
+startLng =
+position.coords.longitude;
 
-        }
+}
 
-        else{
 
-            let startRes =
-            await fetch(
+// USE MANUAL START LOCATION
+
+else{
+
+let startRes =
+await fetch(
 `https://nominatim.openstreetmap.org/search?format=json&q=${start}`
-            );
+);
 
-            let startData =
-            await startRes.json();
+let startData =
+await startRes.json();
 
-            startLat =
-            parseFloat(startData[0].lat);
+if(startData.length===0){
 
-            startLng =
-            parseFloat(startData[0].lon);
+alert("Start location not found");
 
-        }
+return;
 
-        let endRes =
-        await fetch(
+}
+
+startLat =
+parseFloat(startData[0].lat);
+
+startLng =
+parseFloat(startData[0].lon);
+
+}
+
+
+
+let endRes =
+await fetch(
 `https://nominatim.openstreetmap.org/search?format=json&q=${end}`
-        );
+);
 
-        let endData =
-        await endRes.json();
+let endData =
+await endRes.json();
 
-        let endLat =
-        parseFloat(endData[0].lat);
+if(endData.length===0){
 
-        let endLng =
-        parseFloat(endData[0].lon);
+alert("Destination not found");
 
-        if(routingControl){
+return;
 
-            map.removeControl(
-                routingControl
-            );
+}
 
-        }
+let endLat =
+parseFloat(endData[0].lat);
 
-        routingControl =
-        L.Routing.control({
+let endLng =
+parseFloat(endData[0].lon);
 
-            waypoints:[
 
-                L.latLng(
-                    startLat,
-                    startLng
-                ),
+if(routingControl){
 
-                L.latLng(
-                    endLat,
-                    endLng
-                )
+map.removeControl(
+routingControl
+);
 
-            ],
+}
 
-            routeWhileDragging:false,
 
-            draggableWaypoints:false,
+routingControl =
+L.Routing.control({
 
-            addWaypoints:false
+waypoints:[
 
-        }).addTo(map);
+L.latLng(
+startLat,
+startLng
+),
 
-        map.setView(
-            [startLat,startLng],
-            13
-        );
+L.latLng(
+endLat,
+endLng
+)
 
-        vehicleMarker.setLatLng(
-            [startLat,startLng]
-        );
+],
 
-        getTrafficData(
-            endLat,
-            endLng
-        );
+routeWhileDragging:false,
 
-    }
+draggableWaypoints:false,
 
-    catch(err){
+addWaypoints:false
 
-        console.log(err);
+}).addTo(map);
 
-        alert("Route Failed");
 
-    }
+vehicleMarker.setLatLng(
+[startLat,startLng]
+);
+
+
+map.setView(
+[startLat,startLng],
+13
+);
+
+
+document.getElementById(
+"map"
+).scrollIntoView({
+
+behavior:"smooth"
+
+});
+
+
+getTrafficData(
+startLat,
+startLng
+);
+
+}
+
+catch(err){
+
+console.log(err);
+
+alert(
+"Route Failed"
+);
+
+}
 
 }
 // =========================
@@ -682,19 +719,21 @@ function startRealTracking(){
             15
         );
 
-        let speed =
-        position.coords.speed;
+let speed =
+position.coords.speed;
 
-        if(speed===null){
+if(speed===null || speed===undefined){
 
-            speed =
-            Math.floor(
-            Math.random()*100
-            );
+speed=0;
 
-        }
+}else{
 
-        speed=Math.round(speed);
+speed =
+Math.round(
+speed*3.6
+);
+
+}
 
         document.getElementById(
         "currentSpeed"
