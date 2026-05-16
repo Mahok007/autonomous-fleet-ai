@@ -695,120 +695,9 @@ alert(
 }
 
 }
-// =========================
-// START TRACKING
-// =========================
+function stopTrip(){
 
-function startRealTracking(){
-
-document.getElementById(
-"tripStatus"
-).innerText="TRIP STARTED";
-
-document.getElementById(
-"tripStatus"
-).style.color="#22c55e";
-
-let customStart=
-document.getElementById(
-"startLocation"
-).value.trim();
-
-
-// ---------- CUSTOM LOCATION MODE ----------
-
-if(customStart!==""){
-
-fetch(
-`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(customStart)}`
-)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-if(data.length===0){
-
-alert("Location not found");
-
-return;
-
-}
-
-let lat=
-parseFloat(data[0].lat);
-
-let lng=
-parseFloat(data[0].lon);
-
-
-// move marker
-
-vehicleMarker.setLatLng([lat,lng]);
-
-map.setView([lat,lng],15);
-
-
-// simulate movement
-
-let fakeSpeed=30;
-
-setInterval(()=>{
-
-fakeSpeed += Math.floor(
-(Math.random()*10)-5
-);
-
-if(fakeSpeed<20)
-fakeSpeed=20;
-
-if(fakeSpeed>80)
-fakeSpeed=80;
-
-document.getElementById(
-"currentSpeed"
-).innerText=
-fakeSpeed;
-
-
-// shift marker slightly
-
-lat += 0.0005;
-
-lng += 0.0005;
-
-vehicleMarker.setLatLng(
-[lat,lng]
-);
-
-tripData.push({
-
-lat,
-lng,
-speed:fakeSpeed,
-time:new Date()
-.toLocaleTimeString()
-
-});
-
-getTrafficData(
-lat,
-lng
-);
-
-},3000);
-
-});
-
-return;
-
-}
-
-
-
-// ---------- REAL GPS MODE ----------
-
-if(watchId!==null){
+if(watchId){
 
 navigator.geolocation.clearWatch(
 watchId
@@ -816,117 +705,23 @@ watchId
 
 }
 
-watchId=
-navigator.geolocation.watchPosition(
+if(simulationInterval){
 
-function(position){
-
-let lat=
-position.coords.latitude;
-
-let lng=
-position.coords.longitude;
-
-vehicleMarker.setLatLng(
-[lat,lng]
-);
-
-map.setView(
-[lat,lng],
-15
-);
-
-
-// REAL SPEED
-
-let speed=
-position.coords.speed;
-
-
-// if browser gives null
-
-if(
-speed===null ||
-speed===undefined
-){
-
-speed=0;
-
-}else{
-
-speed=
-Math.round(
-speed*3.6
+clearInterval(
+simulationInterval
 );
 
 }
 
 document.getElementById(
-"currentSpeed"
+"tripStatus"
 ).innerText=
-speed;
-
-
-// events
-
-if(speed>previousSpeed){
-
-totalAccelEvents++;
-
-}else{
-
-totalBrakeEvents++;
-
-}
+"TRIP ENDED";
 
 document.getElementById(
-"totalBrake"
-).innerText=
-totalBrakeEvents;
-
-document.getElementById(
-"totalAccel"
-).innerText=
-totalAccelEvents;
-
-previousSpeed=speed;
-
-tripData.push({
-
-lat,
-lng,
-speed,
-time:new Date()
-.toLocaleTimeString()
-
-});
-
-getTrafficData(
-lat,
-lng
-);
-
-},
-
-function(error){
-
-console.log(error);
-
-alert(
-"Allow Location Permission"
-);
-
-},
-
-{
-
-enableHighAccuracy:true,
-timeout:10000,
-maximumAge:0
-
-}
-
-);
+"tripStatus"
+).style.color=
+"#ef4444";
 
 }
 // =========================
