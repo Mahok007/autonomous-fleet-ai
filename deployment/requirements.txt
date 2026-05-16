@@ -9,3 +9,4 @@ passlib
 bcrypt
 python-multipart
 joblib
+PyJWT==2.8.0

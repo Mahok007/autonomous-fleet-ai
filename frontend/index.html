@@ -517,23 +517,34 @@ map.setView([startLat,startLng],13);
 
 function startRealTracking(){
 
+navigator.geolocation.getCurrentPosition(
+
+function(position){
+
 document.getElementById(
 "tripStatus"
 ).innerText=
-"STARTING...";
+"TRIP STARTED";
 
 document.getElementById(
 "tripStatus"
 ).style.color=
-"orange";
+"#22c55e";
 
-if(watchId){
+let lat=
+position.coords.latitude;
 
-navigator.geolocation.clearWatch(
-watchId
+let lng=
+position.coords.longitude;
+
+vehicleMarker.setLatLng(
+[lat,lng]
 );
 
-}
+map.setView(
+[lat,lng],
+15
+);
 
 watchId=
 navigator.geolocation.watchPosition(
@@ -555,48 +566,19 @@ map.setView(
 15
 );
 
-document.getElementById(
-"tripStatus"
-).innerText=
-"TRIP STARTED";
-
-document.getElementById(
-"tripStatus"
-).style.color=
-"#22c55e";
-
-
-// REAL DEVICE SPEED
-
 let speed=
-pos.coords.speed;
-
-if(speed==null){
-
-speed=0;
-
-}else{
-
-speed=
-Math.round(
-speed*3.6
+Math.floor(
+Math.random()*120
 );
-
-}
 
 document.getElementById(
 "currentSpeed"
 ).innerText=
 speed;
 
-
-// LIVE CHART
-
 speedLabels.push(
-
 new Date()
 .toLocaleTimeString()
-
 );
 
 speedValues.push(
@@ -613,9 +595,6 @@ speedValues.shift();
 
 speedChart.update();
 
-
-// EVENT COUNTS
-
 if(speed>previousSpeed){
 
 accelEvents++;
@@ -628,10 +607,8 @@ brakeEvents++;
 
 decisionChart.data.datasets[0]
 .data=[
-
 brakeEvents,
 accelEvents
-
 ];
 
 decisionChart.update();
@@ -649,9 +626,6 @@ accelEvents;
 previousSpeed=
 speed;
 
-
-// SAVE TRIP
-
 tripData.push({
 
 lat,
@@ -659,9 +633,6 @@ lng,
 speed
 
 });
-
-
-// LIVE TRAFFIC
 
 getTrafficData(
 lat,
@@ -674,54 +645,43 @@ function(error){
 
 console.log(error);
 
-document.getElementById(
-"tripStatus"
-).innerText=
-"LOCATION DENIED";
-
-document.getElementById(
-"tripStatus"
-).style.color=
-"#ef4444";
+alert(
+"Location Error"
+);
 
 },
 
 {
 
-enableHighAccuracy:true,
-maximumAge:0,
-timeout:10000
+enableHighAccuracy:true
+
+}
+
+);
+
+},
+
+function(){
+
+alert(
+"Allow Location Permission"
+);
 
 }
 
 );
 
 }
-
-
-// =========================
-// STOP TRIP
-// =========================
 
 function stopTrip(){
 
-document.getElementById(
-"tripStatus"
-).innerText=
+document.getElementById("tripStatus").innerText =
 "TRIP ENDED";
 
-document.getElementById(
-"tripStatus"
-).style.color=
+document.getElementById("tripStatus").style.color =
 "#ef4444";
 
-if(watchId){
-
-navigator.geolocation.clearWatch(
-watchId
-);
-
-}
+navigator.geolocation.clearWatch(watchId);
 
 }
 
@@ -886,190 +846,7 @@ loadData();
 
 }
 
-// =========================
-// TRAFFIC API
-// =========================
 
-async function getTrafficData(lat,lng){
-
-document.getElementById(
-"trafficLevel"
-).innerText=
-"Loading...";
-
-try{
-
-let traffic=
-["Low","Moderate","High"];
-
-let random=
-Math.floor(
-Math.random()*3
-);
-
-let delay=
-Math.floor(
-Math.random()*25
-);
-
-document.getElementById(
-"trafficLevel"
-).innerText=
-traffic[random];
-
-document.getElementById(
-"trafficDelay"
-).innerText=
-delay;
-
-}
-catch(error){
-
-console.log(error);
-
-document.getElementById(
-"trafficLevel"
-).innerText=
-"API Error";
-
-}
-
-}
-
-
-
-// =========================
-// START TRACKING
-// =========================
-
-function startRealTracking(){
-
-navigator.geolocation.getCurrentPosition(
-
-function(position){
-
-document.getElementById(
-"tripStatus"
-).innerText=
-"TRIP STARTED";
-
-document.getElementById(
-"tripStatus"
-).style.color=
-"#22c55e";
-
-let lat=
-position.coords.latitude;
-
-let lng=
-position.coords.longitude;
-
-vehicleMarker.setLatLng(
-[lat,lng]
-);
-
-map.setView(
-[lat,lng],
-15
-);
-
-watchId=
-navigator.geolocation.watchPosition(
-
-function(pos){
-
-let lat=
-pos.coords.latitude;
-
-let lng=
-pos.coords.longitude;
-
-vehicleMarker.setLatLng(
-[lat,lng]
-);
-
-map.setView(
-[lat,lng],
-15
-);
-
-let speed=
-Math.floor(
-Math.random()*120
-);
-
-document.getElementById(
-"currentSpeed"
-).innerText=
-speed;
-
-if(speed>previousSpeed){
-
-accelEvents++;
-
-}else{
-
-brakeEvents++;
-
-}
-
-document.getElementById(
-"totalBrake"
-).innerText=
-brakeEvents;
-
-document.getElementById(
-"totalAccel"
-).innerText=
-accelEvents;
-
-previousSpeed=
-speed;
-
-getTrafficData(
-lat,
-lng
-);
-
-tripData.push({
-
-lat,
-lng,
-speed
-
-});
-
-},
-
-function(error){
-
-console.log(error);
-
-alert(
-"Location Error"
-);
-
-},
-
-{
-enableHighAccuracy:true
-}
-
-);
-
-},
-
-function(){
-
-alert(
-"Allow Location Permission"
-);
-
-}
-
-);
-
-}
 </script>
 
 </body>

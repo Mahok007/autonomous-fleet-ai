@@ -695,6 +695,241 @@ alert(
 }
 
 }
+
+// =========================
+// START TRACKING
+// =========================
+
+let simulationInterval=null;
+
+async function startRealTracking(){
+
+document.getElementById(
+"tripStatus"
+).innerText="TRIP STARTED";
+
+document.getElementById(
+"tripStatus"
+).style.color="#22c55e";
+
+let customStart=
+document.getElementById(
+"startLocation"
+).value.trim();
+
+
+// clear previous
+
+if(watchId){
+
+navigator.geolocation.clearWatch(
+watchId
+);
+
+}
+
+if(simulationInterval){
+
+clearInterval(
+simulationInterval
+);
+
+}
+
+
+// CUSTOM START LOCATION
+
+if(customStart!==""){
+
+try{
+
+let result=
+await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(customStart)}`
+);
+
+let data=
+await result.json();
+
+if(data.length===0){
+
+alert(
+"Location not found"
+);
+
+return;
+
+}
+
+let lat=
+parseFloat(data[0].lat);
+
+let lng=
+parseFloat(data[0].lon);
+
+vehicleMarker.setLatLng(
+[lat,lng]
+);
+
+map.setView(
+[lat,lng],
+15
+);
+
+let fakeSpeed=40;
+
+
+simulationInterval=
+setInterval(()=>{
+
+fakeSpeed +=
+Math.floor(
+Math.random()*10-5
+);
+
+if(fakeSpeed<30)
+fakeSpeed=30;
+
+if(fakeSpeed>90)
+fakeSpeed=90;
+
+
+document.getElementById(
+"currentSpeed"
+).innerText=
+fakeSpeed;
+
+
+lat+=0.0007;
+
+lng+=0.0007;
+
+vehicleMarker.setLatLng(
+[lat,lng]
+);
+
+tripData.push({
+
+lat,
+lng,
+speed:fakeSpeed,
+
+time:new Date()
+.toLocaleTimeString()
+
+});
+
+getTrafficData(
+lat,
+lng
+);
+
+},3000);
+
+}
+
+catch(err){
+
+console.log(err);
+
+alert(
+"Custom location failed"
+);
+
+}
+
+return;
+
+}
+
+
+// REAL GPS MODE
+
+watchId=
+navigator.geolocation.watchPosition(
+
+function(position){
+
+let lat=
+position.coords.latitude;
+
+let lng=
+position.coords.longitude;
+
+vehicleMarker.setLatLng(
+[lat,lng]
+);
+
+map.setView(
+[lat,lng],
+15
+);
+
+let speed=
+position.coords.speed;
+
+
+if(speed==null){
+
+speed=0;
+
+}else{
+
+speed=
+Math.round(
+speed*3.6
+);
+
+}
+
+document.getElementById(
+"currentSpeed"
+).innerText=
+speed;
+
+tripData.push({
+
+lat,
+lng,
+speed,
+
+time:new Date()
+.toLocaleTimeString()
+
+});
+
+getTrafficData(
+lat,
+lng
+);
+
+},
+
+function(){
+
+alert(
+"Allow location permission"
+);
+
+},
+
+{
+
+enableHighAccuracy:true,
+timeout:10000,
+maximumAge:0
+
+}
+
+);
+
+}
+
+
+// =========================
+// STOP TRIP
+// =========================
+
 function stopTrip(){
 
 if(watchId){
@@ -724,32 +959,6 @@ document.getElementById(
 "#ef4444";
 
 }
-// =========================
-// STOP TRIP
-// =========================
-
-function stopTrip(){
-
-    if(watchId!==null){
-
-        navigator
-        .geolocation
-        .clearWatch(watchId);
-
-    }
-
-    document.getElementById(
-        "tripStatus"
-    ).innerText =
-    "TRIP ENDED";
-
-    document.getElementById(
-        "tripStatus"
-    ).style.color =
-    "#ef4444";
-
-}
-
 // =========================
 // LOAD DATA
 // =========================
