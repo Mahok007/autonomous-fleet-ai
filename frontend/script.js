@@ -1185,6 +1185,18 @@ async function getTrafficData(lat,lng){
 
         if(!data.flowSegmentData){
 
+            let trafficLevel =
+            document.getElementById(
+            "trafficLevel"
+            );
+
+            if(trafficLevel){
+
+                trafficLevel.innerText =
+                "No Data";
+
+            }
+
             return;
 
         }
@@ -1201,40 +1213,34 @@ async function getTrafficData(lat,lng){
             freeFlowSpeed-currentSpeed
         );
 
-        let traffic =
-        "Low";
+        let traffic="Low";
 
-        let color =
-        "green";
+        let color="green";
 
         if(delay>20){
 
-            traffic =
-            "High";
+            traffic="High";
 
-            color =
-            "red";
+            color="red";
 
         }
 
         else if(delay>10){
 
-            traffic =
-            "Moderate";
+            traffic="Moderate";
 
-            color =
-            "yellow";
+            color="orange";
 
         }
 
         let trafficLevel =
         document.getElementById(
-            "trafficLevel"
+        "trafficLevel"
         );
 
         let trafficDelay =
         document.getElementById(
-            "trafficDelay"
+        "trafficDelay"
         );
 
         if(trafficLevel){
@@ -1247,26 +1253,19 @@ async function getTrafficData(lat,lng){
         if(trafficDelay){
 
             trafficDelay.innerText =
-            delay+" mins";
+            delay + " mins";
 
         }
-
-
-        // REMOVE OLD HEAT
 
         if(trafficCircle){
 
             map.removeLayer(
-                trafficCircle
+            trafficCircle
             );
 
         }
 
-
-        // CREATE HEAT CIRCLE
-
         trafficCircle =
-
         L.circle(
 
             [lat,lng],
@@ -1283,49 +1282,42 @@ async function getTrafficData(lat,lng){
 
             }
 
-        )
+        ).addTo(map);
 
-        .addTo(map);
+    }
 
+    catch(error){
 
-        heatLayers.push(
-            trafficCircle
+        console.log(error);
+
+        let trafficLevel =
+        document.getElementById(
+        "trafficLevel"
         );
 
+        let trafficDelay =
+        document.getElementById(
+        "trafficDelay"
+        );
 
-        // KEEP LAST 20
+        if(trafficLevel){
 
-        if(
-            heatLayers.length>20
-        ){
+            trafficLevel.innerText =
+            "API Error";
 
-            map.removeLayer(
-                heatLayers[0]
-            );
+        }
 
-            heatLayers.shift();
+        if(trafficDelay){
+
+            trafficDelay.innerText =
+            "0";
 
         }
 
     }
 
-catch(error){
-
-console.log(error);
-
-let trafficLevel =
-document.getElementById(
-"trafficLevel"
-);
-
-if(trafficLevel){
-
-trafficLevel.innerText =
-"API Error";
-
 }
 
-}
 // =========================
 // LOGOUT
 // =========================
@@ -1338,4 +1330,4 @@ window.location.href =
 "login.html";
 
 }
-}
+
