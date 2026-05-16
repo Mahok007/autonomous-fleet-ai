@@ -13,6 +13,21 @@ let accelData = [];
 
 let map;
 let routingControl;
+
+// =========================
+// AUTH CHECK
+// =========================
+
+let token =
+localStorage.getItem("token");
+
+if(!token){
+
+window.location.href =
+"login.html";
+
+}
+
 let vehicleMarker;
 
 let trafficCircle = null;
@@ -1263,9 +1278,9 @@ async function getTrafficData(lat,lng){
 
 function logout(){
 
-    localStorage.removeItem("token");
+localStorage.removeItem("token");
 
-    window.location.href =
-    "login.html";
+window.location.href =
+"login.html";
 
 }
