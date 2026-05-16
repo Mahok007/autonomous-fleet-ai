@@ -1506,15 +1506,37 @@ document.getElementById(
 
 }
 }
+
+/// voice
 function startVoice(){
 
-const recognition=
+if(
+!("webkitSpeechRecognition" in window)
+){
+
+alert(
+"Voice recognition not supported in this browser"
+);
+
+return;
+
+}
+
+const recognition =
 new webkitSpeechRecognition();
 
-recognition.lang=
-"en-US";
+recognition.lang="en-US";
+
+recognition.continuous=false;
+
+recognition.interimResults=false;
 
 recognition.start();
+
+document.getElementById(
+"aiResponse"
+).innerText=
+"🎤 Listening... Speak now";
 
 recognition.onresult=
 function(event){
@@ -1528,8 +1550,13 @@ document.getElementById(
 ).value=
 text;
 
+document.getElementById(
+"aiResponse"
+).innerText=
+"You said: "+text;
 
-// smart commands
+
+// commands
 
 if(
 text.toLowerCase()
@@ -1537,7 +1564,6 @@ text.toLowerCase()
 ){
 
 startRealTracking();
-
 return;
 
 }
@@ -1548,7 +1574,6 @@ text.toLowerCase()
 ){
 
 stopTrip();
-
 return;
 
 }
@@ -1559,12 +1584,24 @@ text.toLowerCase()
 ){
 
 findRoute();
-
 return;
 
 }
 
+
+// send to AI assistant
+
 askAI();
+
+};
+
+recognition.onerror=
+function(){
+
+document.getElementById(
+"aiResponse"
+).innerText=
+"Microphone Error";
 
 };
 
