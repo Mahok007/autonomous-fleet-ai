@@ -15,6 +15,9 @@ let map;
 let routingControl;
 let vehicleMarker;
 
+let trafficCircle = null;
+let heatLayers = [];
+
 let tripData = [];
 
 let watchId = null;
@@ -1100,7 +1103,7 @@ function askAI(){
 }
 
 // =========================
-// TRAFFIC API
+// TRAFFIC API + HEATMAP
 // =========================
 
 async function getTrafficData(lat,lng){
@@ -1119,8 +1122,11 @@ async function getTrafficData(lat,lng){
         const data =
         await response.json();
 
-        if(!data.flowSegmentData)
+        if(!data.flowSegmentData){
+
             return;
+
+        }
 
         let currentSpeed =
         data.flowSegmentData.currentSpeed;
@@ -1134,17 +1140,29 @@ async function getTrafficData(lat,lng){
             freeFlowSpeed-currentSpeed
         );
 
-        let traffic="Low";
+        let traffic =
+        "Low";
+
+        let color =
+        "green";
 
         if(delay>20){
 
-            traffic="High";
+            traffic =
+            "High";
+
+            color =
+            "red";
 
         }
 
         else if(delay>10){
 
-            traffic="Moderate";
+            traffic =
+            "Moderate";
+
+            color =
+            "yellow";
 
         }
 
@@ -1168,7 +1186,63 @@ async function getTrafficData(lat,lng){
         if(trafficDelay){
 
             trafficDelay.innerText =
-            delay + " mins";
+            delay+" mins";
+
+        }
+
+
+        // REMOVE OLD HEAT
+
+        if(trafficCircle){
+
+            map.removeLayer(
+                trafficCircle
+            );
+
+        }
+
+
+        // CREATE HEAT CIRCLE
+
+        trafficCircle =
+
+        L.circle(
+
+            [lat,lng],
+
+            {
+
+                radius:300,
+
+                color:color,
+
+                fillColor:color,
+
+                fillOpacity:0.35
+
+            }
+
+        )
+
+        .addTo(map);
+
+
+        heatLayers.push(
+            trafficCircle
+        );
+
+
+        // KEEP LAST 20
+
+        if(
+            heatLayers.length>20
+        ){
+
+            map.removeLayer(
+                heatLayers[0]
+            );
+
+            heatLayers.shift();
 
         }
 
@@ -1176,7 +1250,9 @@ async function getTrafficData(lat,lng){
 
     catch(error){
 
-        console.log(error);
+        console.log(
+            error
+        );
 
     }
 
