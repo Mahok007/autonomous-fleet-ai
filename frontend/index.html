@@ -645,17 +645,48 @@ watchId
 }
 
 
-watchId=
-navigator.geolocation.watchPosition(
+// CHECK CUSTOM LOCATION FIRST
 
-function(pos){
+let customStart=
+document.getElementById(
+"startLocation"
+).value.trim();
+
+
+// IF CUSTOM LOCATION ENTERED
+
+if(customStart!==""){
+
+fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(customStart)}`
+)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+if(data.length===0){
+
+alert(
+"Location not found"
+);
+
+return;
+
+}
 
 let lat=
-pos.coords.latitude;
+parseFloat(
+data[0].lat
+);
 
 let lng=
-pos.coords.longitude;
+parseFloat(
+data[0].lon
+);
 
+
+// MOVE MAP TO CUSTOM LOCATION
 
 vehicleMarker.setLatLng(
 [lat,lng]
@@ -667,13 +698,70 @@ map.setView(
 );
 
 
-// REAL DEVICE SPEED
+// SPEED 0 UNTIL MOVING
+
+document.getElementById(
+"currentSpeed"
+).innerText=
+"0";
+
+
+// LOAD TRAFFIC
+
+getTrafficData(
+lat,
+lng
+);
+
+
+// SAVE
+
+tripData.push({
+
+lat,
+lng,
+speed:0,
+
+time:new Date()
+.toLocaleTimeString()
+
+});
+
+});
+
+return;
+
+}
+
+
+// REAL GPS MODE
+
+watchId=
+navigator.geolocation.watchPosition(
+
+function(pos){
+
+let lat=
+pos.coords.latitude;
+
+let lng=
+pos.coords.longitude;
+
+vehicleMarker.setLatLng(
+[lat,lng]
+);
+
+map.setView(
+[lat,lng],
+15
+);
+
+
+// REAL SPEED ONLY
 
 let speed=
 pos.coords.speed;
 
-
-// desktop browsers often return null
 
 if(
 speed===null ||
@@ -701,7 +789,7 @@ document.getElementById(
 speed;
 
 
-// SPEED CHART
+// CHART
 
 speedLabels.push(
 new Date()
@@ -723,7 +811,7 @@ speedValues.shift();
 speedChart.update();
 
 
-// BRAKE / ACCEL EVENTS
+// BRAKE + ACCEL
 
 if(speed>previousSpeed){
 
@@ -736,7 +824,6 @@ brakeEvents++;
 
 }
 
-
 decisionChart.data.datasets[0].data=[
 
 brakeEvents,
@@ -745,6 +832,7 @@ accelEvents
 ];
 
 decisionChart.update();
+
 
 document.getElementById(
 "totalBrake"
@@ -991,7 +1079,98 @@ loadData();
 });
 
 }
+async function getTrafficData(lat,lng){
 
+try{
+
+document.getElementById(
+"trafficLevel"
+).innerText=
+"Loading...";
+
+const apiKey=
+"18tEsbkhPAl9eB59hMx6V7QDPfH5QNXC";
+
+const response=
+await fetch(
+
+`https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&key=${apiKey}`
+
+);
+
+const data=
+await response.json();
+
+if(!data.flowSegmentData){
+
+document.getElementById(
+"trafficLevel"
+).innerText=
+"Low";
+
+document.getElementById(
+"trafficDelay"
+).innerText=
+"0 mins";
+
+return;
+
+}
+
+let current=
+data.flowSegmentData.currentSpeed;
+
+let free=
+data.flowSegmentData.freeFlowSpeed;
+
+let delay=
+Math.max(
+0,
+free-current
+);
+
+let level="Low";
+
+if(delay>20){
+
+level="High";
+
+}
+else if(delay>10){
+
+level="Moderate";
+
+}
+
+document.getElementById(
+"trafficLevel"
+).innerText=
+level;
+
+document.getElementById(
+"trafficDelay"
+).innerText=
+delay+" mins";
+
+}
+
+catch(e){
+
+document.getElementById(
+"trafficLevel"
+).innerText=
+"API Error";
+
+document.getElementById(
+"trafficDelay"
+).innerText=
+"0 mins";
+
+}
+
+}
+
+</script>
 
 </script>
 
