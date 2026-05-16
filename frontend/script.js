@@ -55,6 +55,7 @@ const API_BASE =
 // WINDOW LOAD
 // =========================
 
+
 window.onload = function () {
 
     initializeMap();
@@ -63,13 +64,62 @@ window.onload = function () {
 
     loadData();
 
+    // GET CURRENT LOCATION + TRAFFIC
+
+    if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position){
+
+                let lat =
+                position.coords.latitude;
+
+                let lng =
+                position.coords.longitude;
+
+                vehicleMarker.setLatLng(
+                    [lat,lng]
+                );
+
+                map.setView(
+                    [lat,lng],
+                    13
+                );
+
+                getTrafficData(
+                    lat,
+                    lng
+                );
+
+            },
+
+            function(error){
+
+                console.log(error);
+
+                document.getElementById(
+                    "trafficLevel"
+                ).innerText =
+                "Location Denied";
+
+            }
+
+        );
+
+    }
+
     let endInput =
-    document.getElementById("endLocation");
+    document.getElementById(
+        "endLocation"
+    );
 
     if(endInput){
 
         endInput.addEventListener(
+
             "keypress",
+
             function(e){
 
                 if(e.key==="Enter"){
@@ -79,12 +129,12 @@ window.onload = function () {
                 }
 
             }
+
         );
 
     }
 
 };
-
 // =========================
 // INITIALIZE MAP
 // =========================
@@ -565,10 +615,6 @@ async function findRoute(){
     }
 
 }
-
-// =========================
-// START TRACKING
-// =========================
 
 // =========================
 // START TRACKING
@@ -1263,13 +1309,21 @@ async function getTrafficData(lat,lng){
 
     }
 
-    catch(error){
+catch(error){
 
-        console.log(
-            error
-        );
+console.log(error);
 
-    }
+let trafficLevel =
+document.getElementById(
+"trafficLevel"
+);
+
+if(trafficLevel){
+
+trafficLevel.innerText =
+"API Error";
+
+}
 
 }
 // =========================
