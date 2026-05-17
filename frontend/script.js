@@ -2042,7 +2042,7 @@ v.name
 "female"
 )
 
-)||voices[1];
+)||voices[0];
 
 }
 
@@ -2075,6 +2075,8 @@ speech
 // =========================
 
 let eyeClosedStart=null;
+
+let drowsyTriggered=false;
 
 
 // CAMERA START
@@ -2320,6 +2322,10 @@ eyeClosedStart
 
 3000
 
+&&
+
+!drowsyTriggered
+
 ){
 
 document
@@ -2339,6 +2345,7 @@ document
 speak(
 "Driver is drowsy"
 );
+drowsyTriggered=true;
 
 }
 
@@ -2349,12 +2356,32 @@ else{
 eyeClosedStart=
 null;
 
+drowsyTriggered=
+false;
+
 document
 .getElementById(
 "drowsyAlert"
 )
 .style.display=
 "none";
+
+
+// STOP SIREN
+
+let alarm=
+
+document.getElementById(
+"alarm"
+);
+
+if(alarm){
+
+alarm.pause();
+
+alarm.currentTime=0;
+
+}
 
 }
 
