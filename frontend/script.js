@@ -2076,7 +2076,7 @@ window.addEventListener(
 
 "load",
 
-function(){
+async function(){
 
 let cam=
 
@@ -2084,30 +2084,48 @@ document.getElementById(
 "camera"
 );
 
-if(cam){
+if(!cam)
+return;
 
-navigator.mediaDevices
+try{
+
+const stream=
+
+await navigator
+.mediaDevices
 .getUserMedia({
 
-video:true
+video:{
 
-})
+facingMode:
+"user",
 
-.then(stream=>{
+width:1280,
+
+height:720
+
+},
+
+audio:false
+
+});
 
 cam.srcObject=
 stream;
 
-})
+await cam.play();
 
-.catch(error=>{
+}
+catch(error){
 
 console.log(
 "Camera Error:",
 error
 );
 
-});
+alert(
+"Allow camera permission"
+);
 
 }
 
