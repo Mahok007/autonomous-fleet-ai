@@ -1695,7 +1695,11 @@ try{
 const {jsPDF}=window.jspdf;
 
 const pdf=
-new jsPDF();
+new jsPDF(
+"p",
+"mm",
+"a4"
+);
 
 pdf.setFontSize(22);
 
@@ -1736,14 +1740,33 @@ new Date().toLocaleString(),
 );
 
 
-// refresh leaflet map
+// refresh leaflet
 
 map.invalidateSize();
 
+
+// wait for map tiles
+
 await new Promise(
-resolve=>setTimeout(
+resolve=>
+setTimeout(
 resolve,
-1500
+3000
+)
+);
+
+
+// force redraw
+
+map.panBy([1,1]);
+
+map.panBy([-1,-1]);
+
+await new Promise(
+resolve=>
+setTimeout(
+resolve,
+1000
 )
 );
 
@@ -1758,7 +1781,15 @@ document.getElementById(
 ),
 
 {
-useCORS:true
+
+useCORS:true,
+
+allowTaint:true,
+
+backgroundColor:"#ffffff",
+
+scale:2
+
 }
 
 );
@@ -1780,7 +1811,7 @@ image,
 
 190,
 
-90
+95
 
 );
 
