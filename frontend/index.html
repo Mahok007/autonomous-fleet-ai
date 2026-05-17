@@ -863,6 +863,8 @@ document.getElementById(
 speed;
 if(gauge){
 
+if(gauge){
+
 gauge.data.datasets[0]
 .data=[
 
@@ -870,6 +872,10 @@ speed,
 180-speed
 
 ];
+
+gauge.update();
+
+}
 
 gauge.update();
 
@@ -1033,87 +1039,76 @@ tripData=[];
 
 }
 // REPORT
-
 async function downloadTripReport(){
+
+try{
 
 const {jsPDF}=window.jspdf;
 
 const pdf=
 new jsPDF();
 
-pdf.text(
+pdf.setFontSize(22);
 
+pdf.text(
 "Fleet AI Report",
-
 20,
-
 20
+);
 
+pdf.setFontSize(12);
+
+pdf.text(
+"Trip Points: "+
+tripData.length,
+20,
+40
 );
 
 pdf.text(
-
-"Trip Points: "
-+tripData.length,
-
+"Brake Events: "+
+brakeEvents,
 20,
-
-40
-
+55
 );
 
-const mapCanvas=
+pdf.text(
+"Acceleration Events: "+
+accelEvents,
+20,
+70
+);
 
+pdf.text(
+"Generated: "+
+new Date()
+.toLocaleString(),
+20,
+85
+);
+
+
+// map screenshot
+
+const canvas=
 await html2canvas(
-
 document.getElementById(
 "map"
 )
-
 );
 
-let img=
-
-mapCanvas.toDataURL(
+const image=
+canvas.toDataURL(
 "image/png"
 );
 
 pdf.addImage(
-
-img,
-
+image,
 "PNG",
-
 10,
-
-60,
-
-180,
-
-100
-
-);
-
-pdf.text(
-
-"Brake Events: "
-+totalBrakeEvents,
-
-20,
-
-180
-
-);
-
-pdf.text(
-
-"Acceleration: "
-+totalAccelEvents,
-
-20,
-
-195
-
+100,
+190,
+90
 );
 
 pdf.save(
@@ -1122,6 +1117,17 @@ pdf.save(
 
 }
 
+catch(error){
+
+console.log(error);
+
+alert(
+"PDF generation failed"
+);
+
+}
+
+}
 // AI
 // AI ASSISTANT
 
