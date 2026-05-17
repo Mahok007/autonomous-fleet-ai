@@ -755,13 +755,14 @@ document.getElementById(
 "0";
 if(gauge){
 
+if(gauge){
+
 gauge.data.datasets[0]
-.data=[
+.data=[0,180];
 
-speed,
-180-speed
+gauge.update();
 
-];
+}
 
 gauge.update();
 
@@ -1681,5 +1682,122 @@ data:[
 }
 
 });
+
+}
+// =========================
+// DOWNLOAD PDF REPORT
+// =========================
+
+async function downloadTripReport(){
+
+try{
+
+const {jsPDF}=window.jspdf;
+
+const pdf=
+new jsPDF();
+
+pdf.setFontSize(22);
+
+pdf.text(
+"Fleet AI Report",
+20,
+20
+);
+
+pdf.setFontSize(12);
+
+pdf.text(
+"Trip Points: "+
+tripData.length,
+20,
+40
+);
+
+pdf.text(
+"Brake Events: "+
+totalBrakeEvents,
+20,
+55
+);
+
+pdf.text(
+"Acceleration Events: "+
+totalAccelEvents,
+20,
+70
+);
+
+pdf.text(
+"Generated: "+
+new Date().toLocaleString(),
+20,
+85
+);
+
+
+// refresh leaflet map
+
+map.invalidateSize();
+
+await new Promise(
+resolve=>setTimeout(
+resolve,
+1500
+)
+);
+
+
+// capture map
+
+const canvas=
+await html2canvas(
+
+document.getElementById(
+"map"
+),
+
+{
+useCORS:true
+}
+
+);
+
+const image=
+canvas.toDataURL(
+"image/png"
+);
+
+pdf.addImage(
+
+image,
+
+"PNG",
+
+10,
+
+100,
+
+190,
+
+90
+
+);
+
+pdf.save(
+"fleet_report.pdf"
+);
+
+}
+
+catch(error){
+
+console.log(error);
+
+alert(
+"PDF generation failed"
+);
+
+}
 
 }
