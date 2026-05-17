@@ -514,24 +514,39 @@ let previousLng = null;
 let previousTime = null;
 let previousSpeed = 0;
 
-// MAP
+// =========================
+// MAP LOAD
+// =========================
 
 window.onload=function(){
 
-map = L.map("map")
-.setView([20.5937,78.9629],5);
+map =
+L.map("map")
+.setView(
+[20.5937,78.9629],
+5
+);
 
 L.tileLayer(
+
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
 {
-attribution:"© OpenStreetMap"
+attribution:
+"© OpenStreetMap"
 }
+
 ).addTo(map);
 
-vehicleMarker =
+
+vehicleMarker=
+
 L.marker(
+
 [20.5937,78.9629]
+
 ).addTo(map);
+
 
 createCharts();
 
@@ -670,6 +685,17 @@ await fetch(
 
 let endData=
 await endRes.json();
+if(
+endData.length===0
+){
+
+alert(
+"Destination not found"
+);
+
+return;
+
+}
 
 let endLat=
 parseFloat(endData[0].lat);
