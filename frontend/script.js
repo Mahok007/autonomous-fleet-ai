@@ -2070,7 +2070,14 @@ speech
 );
 
 }
-// DRIVER CAMERA
+// =========================
+// DRIVER CAMERA + REAL DROWSINESS
+// =========================
+
+let eyeClosedStart=null;
+
+
+// CAMERA START
 
 window.addEventListener(
 
@@ -2097,8 +2104,7 @@ await navigator
 
 video:{
 
-facingMode:
-"user",
+facingMode:"user",
 
 width:1280,
 
@@ -2115,7 +2121,12 @@ stream;
 
 await cam.play();
 
+await loadFaceModels();
+
+startEyeDetection();
+
 }
+
 catch(error){
 
 console.log(
@@ -2123,10 +2134,234 @@ console.log(
 error
 );
 
-alert(
-"Allow camera permission"
+}
+
+});
+
+
+
+// LOAD AI MODELS
+
+async function loadFaceModels(){
+
+await faceapi
+.nets
+.tinyFaceDetector
+.loadFromUri(
+
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+
+);
+
+await faceapi
+.nets
+.faceLandmark68Net
+.loadFromUri(
+
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+
 );
 
 }
 
-});
+
+
+// DISTANCE
+
+function distance(a,b){
+
+return Math.sqrt(
+
+Math.pow(
+a.x-b.x,
+2
+)
+
++
+
+Math.pow(
+a.y-b.y,
+2
+)
+
+);
+
+}
+
+
+
+// EYE RATIO
+
+function eyeAspectRatio(eye){
+
+let A=
+
+distance(
+eye[1],
+eye[5]
+);
+
+let B=
+
+distance(
+eye[2],
+eye[4]
+);
+
+let C=
+
+distance(
+eye[0],
+eye[3]
+);
+
+return (A+B)/(2*C);
+
+}
+
+
+
+// REAL EYE DETECTION
+
+function startEyeDetection(){
+
+setInterval(
+
+async()=>{
+
+let cam=
+
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+
+const detection=
+
+await faceapi
+
+.detectSingleFace(
+
+cam,
+
+new faceapi
+.TinyFaceDetectorOptions()
+
+)
+
+.withFaceLandmarks();
+
+
+if(!detection)
+return;
+
+
+let leftEye=
+
+detection
+.landmarks
+.getLeftEye();
+
+let rightEye=
+
+detection
+.landmarks
+.getRightEye();
+
+
+let leftEAR=
+
+eyeAspectRatio(
+leftEye
+);
+
+let rightEAR=
+
+eyeAspectRatio(
+rightEye
+);
+
+
+let avgEAR=
+
+(
+leftEAR+
+rightEAR
+)/2;
+
+
+
+if(
+avgEAR<0.22
+){
+
+if(
+!eyeClosedStart
+){
+
+eyeClosedStart=
+Date.now();
+
+}
+
+
+if(
+
+Date.now()
+
+-
+
+eyeClosedStart
+
+>
+
+3000
+
+){
+
+document
+.getElementById(
+"drowsyAlert"
+)
+.style.display=
+"block";
+
+
+document
+.getElementById(
+"alarm"
+)
+.play();
+
+speak(
+"Driver is drowsy"
+);
+
+}
+
+}
+
+else{
+
+eyeClosedStart=
+null;
+
+document
+.getElementById(
+"drowsyAlert"
+)
+.style.display=
+"none";
+
+}
+
+},
+
+300
+
+);
+
+}
