@@ -266,6 +266,22 @@ Logout
 
 <input id="endLocation" placeholder="Enter Destination">
 
+<select id="voiceMode">
+
+<option value="none">
+No Voice
+</option>
+
+<option value="male">
+Male
+</option>
+
+<option value="female">
+Female
+</option>
+
+</select>
+
 <button onclick="findRoute()">
 Find Shortest Route
 </button>
@@ -656,7 +672,33 @@ endLng
 
 ],
 
-routeWhileDragging:false
+routeWhileDragging:false,
+
+lineOptions:{
+
+styles:[
+
+{
+
+color:"#00ffff",
+
+weight:10,
+
+opacity:0.9
+
+},
+
+{
+
+color:"#38bdf8",
+
+weight:5
+
+}
+
+]
+
+}
 
 }).addTo(map);
 

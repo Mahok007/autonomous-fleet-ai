@@ -537,9 +537,12 @@ await new Promise(
 
 (resolve,reject)=>{
 
-navigator.geolocation.getCurrentPosition(
+navigator.geolocation
+.getCurrentPosition(
+
 resolve,
 reject
+
 );
 
 }
@@ -614,6 +617,43 @@ endLng
 routeWhileDragging:false
 
 }).addTo(map);
+routingControl.on(
+
+"routesfound",
+
+function(e){
+
+let route=
+e.routes[0];
+
+let instructions=
+route.instructions;
+
+instructions.forEach(
+
+(step,index)=>{
+
+setTimeout(()=>{
+
+if(
+step.text
+){
+
+speak(
+step.text
+);
+
+}
+
+},
+
+index*15000
+
+);
+
+});
+
+});
 
 
 vehicleMarker.setLatLng(
@@ -734,10 +774,56 @@ vehicleMarker.setLatLng(
 [lat,lng]
 );
 
-map.setView(
+
+// smooth live follow
+
+map.flyTo(
+
 [lat,lng],
-15
+
+17,
+
+{
+
+animate:true,
+
+duration:1.5
+
+}
+
 );
+
+
+// keep destination route updating
+
+if(routingControl){
+
+let destination =
+
+routingControl
+.getWaypoints()[1];
+
+if(
+destination &&
+destination.latLng
+){
+
+routingControl
+.setWaypoints([
+
+L.latLng(
+lat,
+lng
+),
+
+destination
+.latLng
+
+]);
+
+}
+
+}
 
 getTrafficData(
 lat,
@@ -1830,5 +1916,68 @@ alert(
 );
 
 }
+
+}
+/// Speak
+function speak(text){
+
+let mode=
+
+document.getElementById(
+"voiceMode"
+).value;
+
+if(mode==="none")
+return;
+
+const speech=
+
+new SpeechSynthesisUtterance(
+text
+);
+
+let voices=
+speechSynthesis.getVoices();
+
+
+if(mode==="female"){
+
+speech.voice=
+
+voices.find(
+
+v=>
+v.name
+.toLowerCase()
+.includes(
+"female"
+)
+
+)||voices[1];
+
+}
+
+if(mode==="male"){
+
+speech.voice=
+
+voices.find(
+
+v=>
+v.name
+.toLowerCase()
+.includes(
+"male"
+)
+
+)||voices[0];
+
+}
+
+speech.rate=1;
+
+speechSynthesis.speak(
+speech
+);
 
 }
