@@ -740,6 +740,7 @@ document.getElementById(
 "tripStatus"
 ).style.color=
 "#22c55e";
+startCamera();
 
 
 if(watchId){
@@ -2070,25 +2071,12 @@ speech
 );
 
 }
-// =========================
-// DRIVER CAMERA + REAL DROWSINESS
-// =========================
 
-let eyeClosedStart=null;
+// START CAMERA
 
-let drowsyTriggered=false;
-
-
-// CAMERA START
-
-window.addEventListener(
-
-"load",
-
-async function(){
+async function startCamera(){
 
 let cam=
-
 document.getElementById(
 "camera"
 );
@@ -2105,13 +2093,7 @@ await navigator
 .getUserMedia({
 
 video:{
-
-facingMode:"user",
-
-width:1280,
-
-height:720
-
+facingMode:"user"
 },
 
 audio:false
@@ -2132,13 +2114,24 @@ startEyeDetection();
 catch(error){
 
 console.log(
-"Camera Error:",
+"Camera Error",
 error
+);
+
+alert(
+"Allow camera permission"
 );
 
 }
 
-});
+}
+// =========================
+// DRIVER CAMERA + REAL DROWSINESS
+// =========================
+
+let eyeClosedStart=null;
+
+let drowsyTriggered=false;
 
 
 
