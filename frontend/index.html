@@ -18,6 +18,8 @@
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -251,6 +253,21 @@ Logout
 
 <div class="card kpi">
 <h2>Acceleration Events</h2>
+<div class="card kpi">
+
+<h2>
+🛡 Safety Score
+</h2>
+
+<h1
+class="counter"
+id="safetyScore">
+
+100
+
+</h1>
+
+</div>
 <h1 class="counter"  id="totalAccel">0</h1>
 </div>
 
@@ -392,6 +409,20 @@ onclick="window.location.href='history.html'">
 
 </button>
 </div>
+<div class="card">
+
+<h2>
+😴 Driver Camera
+</h2>
+
+<video
+id="camera"
+autoplay
+width="100%">
+</video>
+
+</div>
+
 <!-- AI ASSISTANT -->
 
 <div class="card">

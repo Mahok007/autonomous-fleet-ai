@@ -43,6 +43,33 @@ let previousLng = null;
 let previousTime = null;
 let previousSpeed = 0;
 
+function updateSafetyScore(){
+
+let score=
+
+100-
+
+(totalBrakeEvents*2)
+
+-
+
+(totalAccelEvents);
+
+if(score<0){
+
+score=0;
+
+}
+
+document
+.getElementById(
+"safetyScore"
+)
+.innerText=
+score;
+
+}
+
 let trafficInterval = null;
 
 let totalBrakeEvents = 0;
@@ -588,15 +615,27 @@ L.Routing.control({
 
 lineOptions:{
 
-styles:[{
+styles:[
+
+{
 
 color:"#00ffff",
 
-weight:8,
+weight:10,
 
 opacity:0.9
 
-}]
+},
+
+{
+
+color:"#38bdf8",
+
+weight:5
+
+}
+
+]
 
 },
 
@@ -984,6 +1023,7 @@ liveChart.update();
 
 previousSpeed=
 speed;
+updateSafetyScore();
 
 
 tripData.push({
@@ -1397,6 +1437,51 @@ function askAI(){
     document.getElementById(
         "aiQuestion"
     ).value;
+    question=
+question.toLowerCase();
+
+if(
+question.includes(
+"zoom in"
+)
+){
+
+map.zoomIn();
+
+return;
+
+}
+
+if(
+question.includes(
+"zoom out"
+)
+){
+
+map.zoomOut();
+
+return;
+
+}
+
+if(
+question.includes(
+"show traffic"
+)
+){
+
+let pos=
+vehicleMarker
+.getLatLng();
+
+getTrafficData(
+pos.lat,
+pos.lng
+);
+
+return;
+
+}
 
     if(!question) return;
 
@@ -1979,5 +2064,39 @@ speech.rate=1;
 speechSynthesis.speak(
 speech
 );
+
+}
+/// DRIVER CAMERA
+
+let cam=
+
+document.getElementById(
+"camera"
+);
+
+if(cam){
+
+navigator.mediaDevices
+.getUserMedia({
+
+video:true
+
+})
+
+.then(stream=>{
+
+cam.srcObject=
+stream;
+
+})
+
+.catch(error=>{
+
+console.log(
+"Camera Error:",
+error
+);
+
+});
 
 }
