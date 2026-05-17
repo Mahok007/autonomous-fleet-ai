@@ -87,7 +87,7 @@ Trip ${index+1}
 
 <p>
 Date:
-${trip[0].time}
+${trip[0]?.time || "No data"}
 </p>
 
 <p>
