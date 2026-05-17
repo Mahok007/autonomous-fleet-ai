@@ -42,6 +42,7 @@ let previousLat = null;
 let previousLng = null;
 let previousTime = null;
 let previousSpeed = 0;
+let routeInstructions=[];
 
 function updateSafetyScore(){
 
@@ -656,41 +657,18 @@ endLng
 routeWhileDragging:false
 
 }).addTo(map);
+routeInstructions=[];
+
 routingControl.on(
 
 "routesfound",
 
 function(e){
 
-let route=
-e.routes[0];
+routeInstructions=
 
-let instructions=
-route.instructions;
-
-instructions.forEach(
-
-(step,index)=>{
-
-setTimeout(()=>{
-
-if(
-step.text
-){
-
-speak(
-step.text
-);
-
-}
-
-},
-
-index*15000
-
-);
-
-});
+e.routes[0]
+.instructions;
 
 });
 
@@ -930,6 +908,32 @@ position.coords.latitude;
 
 let lng=
 position.coords.longitude;
+
+if(
+routeInstructions &&
+routeInstructions.length>0
+){
+
+routeInstructions.forEach(
+step=>{
+
+if(
+step.distance &&
+step.distance<100 &&
+!step.spoken
+){
+
+speak(
+step.text
+);
+
+step.spoken=true;
+
+}
+
+});
+
+}
 
 vehicleMarker.setLatLng(
 [lat,lng]
