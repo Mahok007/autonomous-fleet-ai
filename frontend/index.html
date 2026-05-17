@@ -471,9 +471,10 @@ let previousSpeed = 0;
 
 // MAP
 
-window.onload = function(){
+window.onload=function(){
 
-map = L.map("map").setView([20.5937,78.9629],5);
+map = L.map("map")
+.setView([20.5937,78.9629],5);
 
 L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -482,9 +483,14 @@ attribution:"© OpenStreetMap"
 }
 ).addTo(map);
 
-vehicleMarker = L.marker([20.5937,78.9629]).addTo(map);
+vehicleMarker =
+L.marker(
+[20.5937,78.9629]
+).addTo(map);
 
 createCharts();
+
+createGauge();
 
 loadData();
 
@@ -855,7 +861,19 @@ document.getElementById(
 "currentSpeed"
 ).innerText=
 speed;
+if(gauge){
 
+gauge.data.datasets[0]
+.data=[
+
+speed,
+180-speed
+
+];
+
+gauge.update();
+
+}
 
 // CHART
 
@@ -922,6 +940,10 @@ getTrafficData(
 lat,
 lng
 );
+getWeather(
+lat,
+lng
+);
 
 
 // SAVE
@@ -964,8 +986,38 @@ maximumAge:0
 }
 
 
-
 function stopTrip(){
+
+if(watchId){
+
+navigator.geolocation.clearWatch(
+watchId
+);
+
+watchId=null;
+
+}
+
+let allTrips=
+
+JSON.parse(
+localStorage.getItem(
+"tripHistory"
+)
+)||[];
+
+allTrips.push(
+tripData
+);
+
+localStorage.setItem(
+
+"tripHistory",
+
+JSON.stringify(
+allTrips
+)
+);
 
 document.getElementById(
 "tripStatus"
@@ -977,14 +1029,7 @@ document.getElementById(
 ).style.color=
 "#ef4444";
 
-
-if(watchId){
-
-navigator.geolocation.clearWatch(
-watchId
-);
-
-}
+tripData=[];
 
 }
 // REPORT
@@ -1306,7 +1351,7 @@ window.location.href=
 "login.html";
 
 }
-
+/// weather
 async function getWeather(lat,lng){
 
 try{
@@ -1343,6 +1388,51 @@ document.getElementById(
 "Unavailable";
 
 }
+
+}
+let gauge;
+
+function createGauge(){
+
+gauge=
+new Chart(
+
+document.getElementById(
+"speedometer"
+),
+
+{
+
+type:"doughnut",
+
+data:{
+
+datasets:[{
+
+data:[0,180],
+
+backgroundColor:[
+"#22c55e",
+"#1e293b"
+]
+
+}]
+
+},
+
+options:{
+
+cutout:"75%",
+
+plugins:{
+legend:{
+display:false
+}
+}
+
+}
+
+});
 
 }
 function startVoice(){
