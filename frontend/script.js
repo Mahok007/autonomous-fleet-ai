@@ -2066,7 +2066,13 @@ speech
 );
 
 }
-/// DRIVER CAMERA
+// DRIVER CAMERA
+
+window.addEventListener(
+
+"load",
+
+function(){
 
 let cam=
 
@@ -2100,3 +2106,5 @@ error
 });
 
 }
+
+});
