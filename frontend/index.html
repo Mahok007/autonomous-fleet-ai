@@ -12,6 +12,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-gauge"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -21,8 +27,8 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-
 <style>
+
 
 *{
 box-sizing:border-box;
@@ -164,7 +170,31 @@ border-radius:10px;
 min-height:100px;
 color:#22c55e;
 }
+.counter{
 
+font-size:40px;
+
+color:#22c55e;
+
+animation:pulse 1.5s infinite;
+
+}
+
+@keyframes pulse{
+
+0%{
+transform:scale(1);
+}
+
+50%{
+transform:scale(1.08);
+}
+
+100%{
+transform:scale(1);
+}
+
+}
 </style>
 
 </head>
@@ -211,17 +241,17 @@ Logout
 
 <div class="card kpi">
 <h2>Total Trips</h2>
-<h1 id="tripCount">0</h1>
+<h1 class="counter" id="tripCount">0</h1>
 </div>
 
 <div class="card kpi">
 <h2>Brake Events</h2>
-<h1 id="totalBrake">0</h1>
+<h1 class="counter"  id="totalBrake">0</h1>
 </div>
 
 <div class="card kpi">
 <h2>Acceleration Events</h2>
-<h1 id="totalAccel">0</h1>
+<h1 class="counter"  id="totalAccel">0</h1>
 </div>
 
 </div>
@@ -269,7 +299,7 @@ NOT STARTED
 
 <p>
 Current Speed:
-<span id="currentSpeed">0</span>
+<span class="counter"  id="currentSpeed">0</span>
 km/h
 </p>
 
@@ -945,36 +975,91 @@ watchId
 }
 // REPORT
 
-function downloadTripReport(){
+async function downloadTripReport(){
 
-let report = "AI Fleet Report\n\n";
+const {jsPDF}=window.jspdf;
 
-tripData.forEach((item,index)=>{
+const pdf=
+new jsPDF();
 
-report += `
-Point ${index+1}
+pdf.text(
 
-Latitude: ${item.lat}
-Longitude: ${item.lng}
-Speed: ${item.speed}
+"Fleet AI Report",
 
-`;
+20,
 
-});
+20
 
-const blob =
-new Blob([report],{type:"text/plain"});
+);
 
-const link =
-document.createElement("a");
+pdf.text(
 
-link.href =
-URL.createObjectURL(blob);
+"Trip Points: "
++tripData.length,
 
-link.download =
-"trip_report.txt";
+20,
 
-link.click();
+40
+
+);
+
+const mapCanvas=
+
+await html2canvas(
+
+document.getElementById(
+"map"
+)
+
+);
+
+let img=
+
+mapCanvas.toDataURL(
+"image/png"
+);
+
+pdf.addImage(
+
+img,
+
+"PNG",
+
+10,
+
+60,
+
+180,
+
+100
+
+);
+
+pdf.text(
+
+"Brake Events: "
++totalBrakeEvents,
+
+20,
+
+180
+
+);
+
+pdf.text(
+
+"Acceleration: "
++totalAccelEvents,
+
+20,
+
+195
+
+);
+
+pdf.save(
+"fleet_report.pdf"
+);
 
 }
 
@@ -1304,6 +1389,23 @@ document.getElementById(
 };
 
 }
+<div class="card">
+
+<h2>🚀 Live Speedometer</h2>
+
+<canvas
+id="speedometer">
+</canvas>
+<button
+onclick="window.location='history.html'"
+>
+
+📜 View History
+
+</button>
+</div>
+
+
 </script>
 
 </body>

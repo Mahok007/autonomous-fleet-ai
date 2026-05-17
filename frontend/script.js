@@ -62,6 +62,8 @@ window.onload = function () {
 
     initializeCharts();
 
+    createGauge();
+
     loadData();
 
     // GET CURRENT LOCATION + TRAFFIC
@@ -581,6 +583,20 @@ routingControl
 routingControl=
 L.Routing.control({
 
+lineOptions:{
+
+styles:[{
+
+color:"#00ffff",
+
+weight:8,
+
+opacity:0.9
+
+}]
+
+},
+
 waypoints:[
 
 L.latLng(
@@ -652,9 +668,7 @@ alert(
 // START TRACKING
 // =========================
 
-// =========================
-// START TRACKING
-// =========================
+
 
 async function startRealTracking(){
 
@@ -739,7 +753,19 @@ document.getElementById(
 "currentSpeed"
 ).innerText=
 "0";
+if(gauge){
 
+gauge.data.datasets[0]
+.data=[
+
+speed,
+180-speed
+
+];
+
+gauge.update();
+
+}
 
 tripData.push({
 
@@ -930,7 +956,26 @@ watchId
 watchId=null;
 
 }
+let allTrips=
 
+JSON.parse(
+localStorage.getItem(
+"tripHistory"
+)
+)||[];
+
+allTrips.push(
+tripData
+);
+
+localStorage.setItem(
+
+"tripHistory",
+
+JSON.stringify(
+allTrips
+)
+);
 tripStarted=false;
 
 document.getElementById(
@@ -1564,8 +1609,6 @@ text.toLowerCase()
 ){
 
 startRealTracking();
-return;
-
 }
 
 if(
@@ -1604,5 +1647,39 @@ document.getElementById(
 "Microphone Error";
 
 };
+
+}
+
+let gauge;
+
+function createGauge(){
+
+gauge=
+new Chart(
+
+document.getElementById(
+"speedometer"
+),
+
+{
+
+type:"doughnut",
+
+data:{
+
+labels:["Speed"],
+
+datasets:[{
+
+data:[
+0,
+180
+]
+
+}]
+
+}
+
+});
 
 }

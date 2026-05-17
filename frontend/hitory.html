@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Trip History</title>
+
+<style>
+
+body{
+
+background:#0f172a;
+
+color:white;
+
+font-family:Poppins;
+
+padding:20px;
+
+}
+
+.card{
+
+background:#1e293b;
+
+padding:20px;
+
+border-radius:15px;
+
+margin-bottom:20px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+📜 Trip History
+</h1>
+
+<div id="history">
+
+</div>
+
+<script>
+
+let trips=
+
+JSON.parse(
+
+localStorage.getItem(
+"tripHistory"
+)
+
+)||[];
+
+
+let html="";
+
+trips.forEach(
+
+(trip,index)=>{
+
+let maxSpeed=
+Math.max(
+...trip.map(
+t=>t.speed
+)
+);
+
+let avg=
+trip.reduce(
+(a,b)=>a+b.speed,
+0
+)/trip.length;
+
+html+=`
+
+<div class="card">
+
+<h2>
+Trip ${index+1}
+</h2>
+
+<p>
+Date:
+${trip[0].time}
+</p>
+
+<p>
+Max Speed:
+${maxSpeed}
+km/h
+</p>
+
+<p>
+Average Speed:
+${avg.toFixed(1)}
+km/h
+</p>
+
+<button
+onclick="replay(${index})"
+>
+
+Replay
+
+</button>
+
+</div>
+
+`;
+
+}
+
+);
+
+document.getElementById(
+"history"
+).innerHTML=
+html;
+
+
+function replay(i){
+
+localStorage.setItem(
+"selectedTrip",
+JSON.stringify(
+trips[i]
+)
+);
+
+window.location.href=
+"replay.html";
+
+}
+
+</script>
+
+</body>
+
+</html>
