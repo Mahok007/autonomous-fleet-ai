@@ -2229,14 +2229,6 @@ alert(
 
 }
 
-
-// =========================
-// DRIVER CAMERA + REAL DROWSINESS
-// =========================
-
-
-
-
 // LOAD AI MODELS
 
 async function loadFaceModels(){
@@ -2245,18 +2237,21 @@ await faceapi
 .nets
 .tinyFaceDetector
 .loadFromUri(
-
 "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
-
 );
 
 await faceapi
 .nets
 .faceLandmark68Net
 .loadFromUri(
-
 "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+);
 
+await faceapi
+.nets
+.faceExpressionNet
+.loadFromUri(
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
 );
 
 }
@@ -2485,7 +2480,81 @@ alarm.currentTime=0;
 300
 
 );
+function startEmotionDetection(){
 
+setInterval(
+
+async()=>{
+
+let cam=
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+const result=
+
+await faceapi
+
+.detectSingleFace(
+
+cam,
+
+new faceapi
+.TinyFaceDetectorOptions()
+
+)
+
+.withFaceExpressions();
+
+if(!result)
+return;
+
+let expressions=
+result.expressions;
+
+let emotion=
+
+Object.keys(
+expressions
+)
+
+.reduce(
+
+(a,b)=>
+
+expressions[a]>
+expressions[b]
+
+?
+
+a
+
+:
+
+b
+
+);
+
+document
+.getElementById(
+"emotion"
+)
+.innerText=
+
+"Emotion: "
++
+emotion;
+
+},
+
+1500
+
+);
+
+}
 }
 
 ///object detection
