@@ -43,6 +43,11 @@ let previousLng = null;
 let previousTime = null;
 let previousSpeed = 0;
 let routeInstructions=[];
+let detectionRunning=false;
+
+let eyeClosedStart=null;
+
+let drowsyTriggered=false;
 
 function updateSafetyScore(){
 
@@ -2174,21 +2179,21 @@ document.getElementById(
 "camera"
 );
 
-if(!cam)
-return;
+if(!cam) return;
 
 try{
 
-const stream=
+let stream;
+
+try{
+
+stream=
 
 await navigator
 .mediaDevices
 .getUserMedia({
-video:{
 
-facingMode:{
-ideal:"environment"
-},
+video:{
 
 width:{
 ideal:1280
@@ -2196,52 +2201,73 @@ ideal:1280
 
 height:{
 ideal:720
+},
+
+facingMode:
+navigator.userAgent.includes("Mobile")
+
+?
+
+{
+ideal:"environment"
 }
 
-},
-audio:false
+:
 
+"user"
+
+},
+audio: false
 });
+
+}
+
+catch(e){
+
+stream=
+
+await navigator
+.mediaDevices
+.getUserMedia({
+
+video: true,
+audio: false
+});
+
+}
 
 cam.srcObject=
 stream;
 
-await cam.play();
-
-await loadObjects();
-await loadFaceModels();
 
 await new Promise(
-resolve=>
-setTimeout(
-resolve,
-3000
+
+resolve=>{
+
+cam.onloadedmetadata=
+resolve;
+
+}
+
+);
+
+await cam.play();
+
+
+document
+.getElementById(
+"emotion"
 )
-);
+.innerText=
+"Loading AI...";
 
-startEmotionDetection();
 
-if(
-!detectionRunning
-){
+await loadFaceModels();
 
-startEyeDetection();
+await loadObjects();
 
-detectionRunning=true;
 
-}
-
-setInterval(
-detectLane,
-2000
-);
-
-setInterval(
-detectRoad,
-2000
-);
-
-startEmotionDetection();
+setTimeout(()=>{
 
 if(
 !detectionRunning
@@ -2249,27 +2275,42 @@ if(
 
 startEyeDetection();
 
+startEmotionDetection();
+
 detectionRunning=true;
 
 }
+
+},3000);
+
+
+setInterval(()=>{
+
+if(
+cam.readyState===4
+){
+
+detectLane();
+
+detectRoad();
+
+}
+
+},3000);
 
 }
 
 catch(error){
 
-console.log(
-"Camera Error",
-error
-);
+console.log(error);
 
 alert(
-"Allow camera permission"
+"Camera not available"
 );
 
 }
 
 }
-
 // LOAD AI MODELS
 
 async function loadFaceModels(){
@@ -2429,7 +2470,7 @@ rightEAR
 
 
 if(
-avgEAR<0.29
+avgEAR<0.27
 ){
 
 if(
@@ -2534,8 +2575,17 @@ document.getElementById(
 "camera"
 );
 
-if(!cam)
+if(
+!cam
+||
+cam.readyState!==4
+){
+
 return;
+
+}
+
+try{
 
 const result=
 
@@ -2552,11 +2602,25 @@ new faceapi
 
 .withFaceExpressions();
 
-if(!result)
+
+if(!result){
+
+document
+.getElementById(
+"emotion"
+)
+.innerText=
+
+"Emotion: No Face";
+
 return;
+
+}
+
 
 let expressions=
 result.expressions;
+
 
 let emotion=
 
@@ -2568,7 +2632,9 @@ expressions
 
 (a,b)=>
 
-expressions[a]>
+expressions[a]
+>
+
 expressions[b]
 
 ?
@@ -2581,6 +2647,7 @@ b
 
 );
 
+
 document
 .getElementById(
 "emotion"
@@ -2591,26 +2658,53 @@ document
 +
 emotion;
 
+}
+
+catch(error){
+
+console.log(
+"Emotion Error",
+error
+);
+
+}
+
 },
 
-1500
+2000
 
 );
 
 }
 
-///object detection
+
+/// OBJECT DETECTION
+
 let model;
 
 async function loadObjects(){
 
-model=
+try{
 
+model=
 await cocoSsd.load();
 
 detectObjects();
 
 }
+
+catch(error){
+
+console.log(
+"Model Error",
+error
+);
+
+}
+
+}
+
+
 async function detectObjects(){
 
 setInterval(
@@ -2626,8 +2720,14 @@ if(
 !cam
 ||
 !model
-)
+||
+cam.readyState!==4
+){
+
 return;
+
+}
+
 
 const predictions=
 
@@ -2635,12 +2735,10 @@ await model.detect(
 cam
 );
 
-let names=
 
-predictions
-.map(
-p=>p.class
-);
+if(
+predictions.length===0
+){
 
 document
 .getElementById(
@@ -2648,9 +2746,27 @@ document
 )
 .innerText=
 
-"Objects: "
+"Objects: None";
 
-+
+return;
+
+}
+
+
+let names=
+
+predictions.map(
+p=>p.class
+);
+
+
+document
+.getElementById(
+"objectDetect"
+)
+.innerText=
+
+"Objects: "+
 
 names.join(",");
 
@@ -2670,10 +2786,6 @@ document
 .innerText=
 "STOP Sign";
 
-speak(
-"Stop sign ahead"
-);
-
 }
 
 else{
@@ -2689,7 +2801,7 @@ document
 
 },
 
-1000
+2000
 
 );
 

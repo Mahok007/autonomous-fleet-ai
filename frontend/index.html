@@ -1692,9 +1692,11 @@ document.getElementById(
 
 }
 let detectionRunning=false;
+
 let eyeClosedStart=null;
 
 let drowsyTriggered=false;
+
 
 async function startCamera(){
 
@@ -1708,25 +1710,81 @@ return;
 
 try{
 
-const stream=
+let stream;
+
+
+try{
+
+stream=
 
 await navigator
 .mediaDevices
 .getUserMedia({
 
 video:{
-facingMode:"user"
+
+facingMode:{
+ideal:"environment"
+},
+
+width:{
+ideal:1280
+},
+
+height:{
+ideal:720
+}
+
 },
 
 audio:false
 
 });
 
+}
+
+catch(e){
+
+stream=
+
+await navigator
+.mediaDevices
+.getUserMedia({
+
+video:true,
+
+audio:false
+
+});
+
+}
+
+
 cam.srcObject=
 stream;
+
+
+await new Promise(
+
+resolve=>{
+
+cam.onloadedmetadata=
+resolve;
+
+}
+
+);
+
+
 await cam.play();
 
+
 await loadFaceModels();
+
+await loadObjects();
+
+
+setTimeout(()=>{
 
 if(
 !detectionRunning
@@ -1734,10 +1792,17 @@ if(
 
 startEyeDetection();
 
+startEmotionDetection();
+
 detectionRunning=true;
 
 }
 
+},
+
+3000
+
+);
 
 }
 
@@ -1755,6 +1820,369 @@ alert(
 }
 
 }
+
+
+    async function loadFaceModels(){
+
+await faceapi.nets.tinyFaceDetector.loadFromUri(
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+);
+
+await faceapi.nets.faceLandmark68Net.loadFromUri(
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+);
+
+await faceapi.nets.faceExpressionNet.loadFromUri(
+"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+);
+
+}
+
+function distance(a,b){
+
+return Math.sqrt(
+
+Math.pow(a.x-b.x,2)
+
++
+
+Math.pow(a.y-b.y,2)
+
+);
+
+}
+
+
+function eyeAspectRatio(eye){
+
+let A=
+distance(
+eye[1],
+eye[5]
+);
+
+let B=
+distance(
+eye[2],
+eye[4]
+);
+
+let C=
+distance(
+eye[0],
+eye[3]
+);
+
+return(
+A+B
+)/(2*C);
+
+}
+
+function startEyeDetection(){
+
+setInterval(
+
+async()=>{
+
+let cam=
+document.getElementById(
+"camera"
+);
+
+if(
+!cam
+||
+cam.readyState!==4
+)
+return;
+
+
+const detection=
+
+await faceapi
+
+.detectSingleFace(
+
+cam,
+
+new faceapi
+.TinyFaceDetectorOptions()
+
+)
+
+.withFaceLandmarks();
+
+
+if(!detection){
+
+eyeClosedStart=null;
+
+return;
+
+}
+
+
+let left=
+detection.landmarks.getLeftEye();
+
+let right=
+detection.landmarks.getRightEye();
+
+let avg=
+
+(
+eyeAspectRatio(left)
++
+eyeAspectRatio(right)
+)/2;
+
+
+if(avg<0.27){
+
+if(
+!eyeClosedStart
+){
+
+eyeClosedStart=
+Date.now();
+
+}
+
+if(
+Date.now()
+-
+eyeClosedStart
+>
+5000
+&&
+!drowsyTriggered
+){
+
+document
+.getElementById(
+"drowsyAlert"
+)
+.style.display=
+"block";
+
+document
+.getElementById(
+"alarm"
+)
+.play();
+
+drowsyTriggered=true;
+
+}
+
+}
+else{
+
+eyeClosedStart=null;
+
+drowsyTriggered=false;
+
+document
+.getElementById(
+"drowsyAlert"
+)
+.style.display=
+"none";
+
+let alarm=
+document.getElementById(
+"alarm"
+);
+
+if(alarm){
+
+alarm.pause();
+
+alarm.currentTime=0;
+
+}
+
+}
+
+},
+
+500
+
+);
+
+}
+
+function startEmotionDetection(){
+
+setInterval(
+
+async()=>{
+
+const cam=
+document.getElementById(
+"camera"
+);
+
+if(
+!cam
+||
+cam.readyState!==4
+)
+return;
+
+
+const result=
+
+await faceapi
+
+.detectSingleFace(
+
+cam,
+
+new faceapi
+.TinyFaceDetectorOptions()
+
+)
+
+.withFaceExpressions();
+
+
+if(!result){
+
+document
+.getElementById(
+"emotion"
+)
+.innerText=
+"No Face";
+
+return;
+
+}
+
+
+let emotion=
+
+Object.keys(
+result.expressions
+)
+
+.reduce(
+
+(a,b)=>
+
+result.expressions[a]
+>
+
+result.expressions[b]
+
+?
+
+a
+
+:
+
+b
+
+);
+
+
+document
+.getElementById(
+"emotion"
+)
+.innerText=
+
+"Emotion: "
++
+emotion;
+
+},
+
+2000
+
+);
+
+}
+
+let model;
+
+let objectInterval=null;
+
+
+async function loadObjects(){
+
+model=
+await cocoSsd.load();
+
+if(!objectInterval){
+
+objectInterval=
+
+setInterval(
+
+detectObjects,
+
+2000
+
+);
+
+}
+
+}
+
+
+async function detectObjects(){
+
+const cam=
+document.getElementById(
+"camera"
+);
+
+if(
+!cam
+||
+!model
+||
+cam.readyState!==4
+)
+return;
+
+
+const predictions=
+
+await model.detect(
+cam
+);
+
+
+let names=
+
+predictions.map(
+p=>p.class
+);
+
+
+document
+.getElementById(
+"objectDetect"
+)
+.innerText=
+
+"Objects: "
+
++
+
+(
+names.join(",")
+||
+"None"
+);
+
+}
+
+
 
 </script>
 
