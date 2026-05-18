@@ -2198,7 +2198,7 @@ height:{
 ideal:720
 }
 
-}
+},
 audio:false
 
 });
