@@ -928,6 +928,54 @@ speak(
 step.text
 );
 
+let txt=
+step.text
+.toLowerCase();
+
+if(
+txt.includes("left")
+){
+
+document
+.getElementById(
+"turnArrow"
+)
+.innerText=
+"⬅️";
+
+}
+
+else if(
+txt.includes("right")
+){
+
+document
+.getElementById(
+"turnArrow"
+)
+.innerText=
+"➡️";
+
+}
+
+else{
+
+document
+.getElementById(
+"turnArrow"
+)
+.innerText=
+"⬆️";
+
+}
+
+document
+.getElementById(
+"turnText"
+)
+.innerText=
+step.text;
+
 step.spoken=true;
 
 }
@@ -1489,6 +1537,51 @@ return;
 }
 
     if(!question) return;
+
+    if(
+question.includes(
+"navigate home"
+)
+){
+
+document
+.getElementById(
+"endLocation"
+)
+.value=
+"Home";
+
+findRoute();
+
+return;
+
+}
+
+if(
+question.includes(
+"am i safe"
+)
+){
+
+document
+.getElementById(
+"aiResponse"
+)
+.innerText=
+
+"Safety score: "
+
++
+
+document
+.getElementById(
+"safetyScore"
+)
+.innerText;
+
+return;
+
+}
 
     fetch(
 `${API_BASE}/ai_assistant?question=${encodeURIComponent(question)}`
@@ -2105,7 +2198,10 @@ stream;
 
 await cam.play();
 
+await loadObjects();
+
 await loadFaceModels();
+
 if(
 !detectionRunning
 ){
@@ -2132,6 +2228,8 @@ alert(
 }
 
 }
+
+
 // =========================
 // DRIVER CAMERA + REAL DROWSINESS
 // =========================
@@ -2385,6 +2483,102 @@ alarm.currentTime=0;
 },
 
 300
+
+);
+
+}
+
+///object detection
+let model;
+
+async function loadObjects(){
+
+model=
+
+await cocoSsd.load();
+
+detectObjects();
+
+}
+async function detectObjects(){
+
+setInterval(
+
+async()=>{
+
+const cam=
+document.getElementById(
+"camera"
+);
+
+if(
+!cam
+||
+!model
+)
+return;
+
+const predictions=
+
+await model.detect(
+cam
+);
+
+let names=
+
+predictions
+.map(
+p=>p.class
+);
+
+document
+.getElementById(
+"objectDetect"
+)
+.innerText=
+
+"Objects: "
+
++
+
+names.join(",");
+
+
+// TRAFFIC SIGN
+
+if(
+names.includes(
+"stop sign"
+)
+){
+
+document
+.getElementById(
+"trafficSign"
+)
+.innerText=
+"STOP Sign";
+
+speak(
+"Stop sign ahead"
+);
+
+}
+
+else{
+
+document
+.getElementById(
+"trafficSign"
+)
+.innerText=
+"None";
+
+}
+
+},
+
+1000
 
 );
 
