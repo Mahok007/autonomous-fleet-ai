@@ -2184,11 +2184,21 @@ const stream=
 await navigator
 .mediaDevices
 .getUserMedia({
-
 video:{
-facingMode:"user"
+
+facingMode:{
+ideal:"environment"
 },
 
+width:{
+ideal:1280
+},
+
+height:{
+ideal:720
+}
+
+}
 audio:false
 
 });
@@ -2199,8 +2209,28 @@ stream;
 await cam.play();
 
 await loadObjects();
-
 await loadFaceModels();
+
+await new Promise(
+resolve=>
+setTimeout(
+resolve,
+3000
+)
+);
+
+startEmotionDetection();
+
+if(
+!detectionRunning
+){
+
+startEyeDetection();
+
+detectionRunning=true;
+
+}
+
 setInterval(
 detectLane,
 2000
@@ -2399,7 +2429,7 @@ rightEAR
 
 
 if(
-avgEAR<0.22
+avgEAR<0.29
 ){
 
 if(
@@ -2421,7 +2451,7 @@ eyeClosedStart
 
 >
 
-3000
+5000
 
 &&
 
@@ -2664,85 +2694,6 @@ document
 );
 
 }
-
-// EMOTION DETECTION
-
-function startEmotionDetection(){
-
-setInterval(
-
-async()=>{
-
-let cam=
-document.getElementById(
-"camera"
-);
-
-if(!cam)
-return;
-
-const result=
-
-await faceapi
-
-.detectSingleFace(
-
-cam,
-
-new faceapi
-.TinyFaceDetectorOptions()
-
-)
-
-.withFaceExpressions();
-
-if(!result)
-return;
-
-let expressions=
-result.expressions;
-
-let emotion=
-
-Object.keys(
-expressions
-)
-
-.reduce(
-
-(a,b)=>
-
-expressions[a]>
-expressions[b]
-
-?
-
-a
-
-:
-
-b
-
-);
-
-document
-.getElementById(
-"emotion"
-)
-.innerText=
-
-"Emotion: "
-+
-emotion;
-
-},
-
-1500
-
-);
-
-}
-
 
 // LANE DETECTION
 
