@@ -2201,6 +2201,17 @@ await cam.play();
 await loadObjects();
 
 await loadFaceModels();
+setInterval(
+detectLane,
+2000
+);
+
+setInterval(
+detectRoad,
+2000
+);
+
+startEmotionDetection();
 
 if(
 !detectionRunning
@@ -2315,6 +2326,8 @@ return (A+B)/(2*C);
 
 // REAL EYE DETECTION
 
+// REAL EYE DETECTION
+
 function startEyeDetection(){
 
 setInterval(
@@ -2385,7 +2398,6 @@ rightEAR
 )/2;
 
 
-
 if(
 avgEAR<0.22
 ){
@@ -2398,7 +2410,6 @@ eyeClosedStart=
 Date.now();
 
 }
-
 
 if(
 
@@ -2425,7 +2436,6 @@ document
 .style.display=
 "block";
 
-
 document
 .getElementById(
 "alarm"
@@ -2435,6 +2445,7 @@ document
 speak(
 "Driver is drowsy"
 );
+
 drowsyTriggered=true;
 
 }
@@ -2456,11 +2467,7 @@ document
 .style.display=
 "none";
 
-
-// STOP SIREN
-
 let alarm=
-
 document.getElementById(
 "alarm"
 );
@@ -2480,6 +2487,12 @@ alarm.currentTime=0;
 300
 
 );
+
+}
+
+
+// EMOTION DETECTION
+
 function startEmotionDetection(){
 
 setInterval(
@@ -2554,7 +2567,6 @@ emotion;
 
 );
 
-}
 }
 
 ///object detection
@@ -2648,6 +2660,250 @@ document
 },
 
 1000
+
+);
+
+}
+
+// EMOTION DETECTION
+
+function startEmotionDetection(){
+
+setInterval(
+
+async()=>{
+
+let cam=
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+const result=
+
+await faceapi
+
+.detectSingleFace(
+
+cam,
+
+new faceapi
+.TinyFaceDetectorOptions()
+
+)
+
+.withFaceExpressions();
+
+if(!result)
+return;
+
+let expressions=
+result.expressions;
+
+let emotion=
+
+Object.keys(
+expressions
+)
+
+.reduce(
+
+(a,b)=>
+
+expressions[a]>
+expressions[b]
+
+?
+
+a
+
+:
+
+b
+
+);
+
+document
+.getElementById(
+"emotion"
+)
+.innerText=
+
+"Emotion: "
++
+emotion;
+
+},
+
+1500
+
+);
+
+}
+
+
+// LANE DETECTION
+
+async function detectLane(){
+
+const cam=
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+const canvas=
+document.createElement(
+"canvas"
+);
+
+canvas.width=
+cam.videoWidth;
+
+canvas.height=
+cam.videoHeight;
+
+const ctx=
+canvas.getContext(
+"2d"
+);
+
+ctx.drawImage(
+cam,
+0,
+0
+);
+
+canvas.toBlob(
+
+async(blob)=>{
+
+let form=
+new FormData();
+
+form.append(
+"frame",
+blob
+);
+
+const response=
+await fetch(
+
+"https://autonomous-fleet-ai-1.onrender.com/detect_lane",
+
+{
+
+method:"POST",
+
+body:form
+
+}
+
+);
+
+const data=
+await response.json();
+
+document
+.getElementById(
+"laneStatus"
+)
+.innerText=
+
+"Lane: "
+
++
+
+data.lane;
+
+}
+
+);
+
+}
+
+
+// ROAD SEGMENTATION
+
+async function detectRoad(){
+
+const cam=
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+const canvas=
+document.createElement(
+"canvas"
+);
+
+canvas.width=
+cam.videoWidth;
+
+canvas.height=
+cam.videoHeight;
+
+const ctx=
+canvas.getContext(
+"2d"
+);
+
+ctx.drawImage(
+cam,
+0,
+0
+);
+
+canvas.toBlob(
+
+async(blob)=>{
+
+let form=
+new FormData();
+
+form.append(
+"frame",
+blob
+);
+
+const response=
+await fetch(
+
+"https://autonomous-fleet-ai-1.onrender.com/road_segment",
+
+{
+
+method:"POST",
+
+body:form
+
+}
+
+);
+
+const data=
+await response.json();
+
+document
+.getElementById(
+"roadStatus"
+)
+.innerText=
+
+"Road: "
+
++
+
+data.road;
+
+}
 
 );
 
