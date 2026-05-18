@@ -736,6 +736,8 @@ async function startRealTracking(){
 
 tripStarted=true;
 
+startCamera();
+
 document.getElementById(
 "tripStatus"
 ).innerText=
@@ -2315,30 +2317,27 @@ alert(
 
 async function loadFaceModels(){
 
-await faceapi
-.nets
-.tinyFaceDetector
-.loadFromUri(
-"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
-);
+await Promise.all([
 
-await faceapi
-.nets
-.faceLandmark68Net
-.loadFromUri(
-"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
-);
+faceapi.nets.tinyFaceDetector.loadFromUri(
+"https://justadudewhohacks.github.io/face-api.js/models"
+),
 
-await faceapi
-.nets
-.faceExpressionNet
-.loadFromUri(
-"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+faceapi.nets.faceLandmark68Net.loadFromUri(
+"https://justadudewhohacks.github.io/face-api.js/models"
+),
+
+faceapi.nets.faceExpressionNet.loadFromUri(
+"https://justadudewhohacks.github.io/face-api.js/models"
+)
+
+]);
+
+console.log(
+"Face Models Loaded"
 );
 
 }
-
-
 
 // DISTANCE
 
@@ -2430,10 +2429,13 @@ new faceapi
 
 .withFaceLandmarks();
 
+if(!detection){
 
-if(!detection)
+eyeClosedStart=null;
+
 return;
 
+}
 
 let leftEye=
 
@@ -2580,9 +2582,7 @@ if(
 ||
 cam.readyState!==4
 ){
-
 return;
-
 }
 
 try{
@@ -2600,6 +2600,8 @@ new faceapi
 
 )
 
+.withFaceLandmarks()
+
 .withFaceExpressions();
 
 
@@ -2616,7 +2618,6 @@ document
 return;
 
 }
-
 
 let expressions=
 result.expressions;
@@ -2658,6 +2659,10 @@ document
 +
 emotion;
 
+console.log(
+expressions
+);
+
 }
 
 catch(error){
@@ -2678,9 +2683,13 @@ error
 }
 
 
+
 /// OBJECT DETECTION
 
 let model;
+
+let objectInterval=null;
+
 
 async function loadObjects(){
 
@@ -2689,7 +2698,21 @@ try{
 model=
 await cocoSsd.load();
 
-detectObjects();
+if(
+!objectInterval
+){
+
+objectInterval=
+
+setInterval(
+
+detectObjects,
+
+2000
+
+);
+
+}
 
 }
 
@@ -2707,10 +2730,6 @@ error
 
 async function detectObjects(){
 
-setInterval(
-
-async()=>{
-
 const cam=
 document.getElementById(
 "camera"
@@ -2727,7 +2746,6 @@ cam.readyState!==4
 return;
 
 }
-
 
 const predictions=
 
@@ -2766,12 +2784,10 @@ document
 )
 .innerText=
 
-"Objects: "+
-
+"Objects: "
++
 names.join(",");
 
-
-// TRAFFIC SIGN
 
 if(
 names.includes(
@@ -2798,12 +2814,6 @@ document
 "None";
 
 }
-
-},
-
-2000
-
-);
 
 }
 
