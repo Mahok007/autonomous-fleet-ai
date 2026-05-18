@@ -2106,8 +2106,15 @@ stream;
 await cam.play();
 
 await loadFaceModels();
+if(
+!detectionRunning
+){
 
 startEyeDetection();
+
+detectionRunning=true;
+
+}
 
 }
 
@@ -2129,9 +2136,6 @@ alert(
 // DRIVER CAMERA + REAL DROWSINESS
 // =========================
 
-let eyeClosedStart=null;
-
-let drowsyTriggered=false;
 
 
 

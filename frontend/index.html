@@ -834,6 +834,7 @@ document.getElementById(
 "tripStatus"
 ).style.color=
 "#22c55e";
+startCamera();
 
 
 if(watchId){
@@ -1627,6 +1628,70 @@ document.getElementById(
 "Microphone Error";
 
 };
+
+}
+let detectionRunning=false;
+let eyeClosedStart=null;
+
+let drowsyTriggered=false;
+
+async function startCamera(){
+
+let cam=
+document.getElementById(
+"camera"
+);
+
+if(!cam)
+return;
+
+try{
+
+const stream=
+
+await navigator
+.mediaDevices
+.getUserMedia({
+
+video:{
+facingMode:"user"
+},
+
+audio:false
+
+});
+
+cam.srcObject=
+stream;
+await cam.play();
+
+await loadFaceModels();
+
+if(
+!detectionRunning
+){
+
+startEyeDetection();
+
+detectionRunning=true;
+
+}
+
+
+}
+
+catch(error){
+
+console.log(
+"Camera Error",
+error
+);
+
+alert(
+"Allow camera permission"
+);
+
+}
 
 }
 
