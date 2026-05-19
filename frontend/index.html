@@ -589,6 +589,17 @@ Load Database Data
 
 <script>
 
+if(
+!localStorage.getItem(
+"token"
+)
+){
+
+window.location.href=
+"login.html";
+
+}
+
 let map;
 let routingControl;
 let vehicleMarker;
