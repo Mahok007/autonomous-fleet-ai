@@ -126,6 +126,17 @@ type="password"
 id="password"
 placeholder="Enter Password"
 >
+<input
+type="text"
+id="username"
+placeholder="Username (for registration only)"
+>
+
+<input
+type="email"
+id="forgotEmail"
+placeholder="Email for password recovery"
+>
 
 <button onclick="login()">
 Login
@@ -226,7 +237,7 @@ document.getElementById(
 "message"
 ).innerText=
 
-data.message ||
+data.message || "Wrong email or password"
 "Login Failed";
 
 }
@@ -238,9 +249,9 @@ data.message ||
 async function registerUser(){
 
 let username=
-prompt(
-"Enter Username"
-);
+document.getElementById(
+"username"
+).value;
 
 let email=
 document.getElementById(
@@ -270,9 +281,7 @@ headers:{
 body:JSON.stringify({
 
 username:username,
-
 email:email,
-
 password:password
 
 })
@@ -284,9 +293,10 @@ password:password
 const data=
 await response.json();
 
-alert(
-data.message
-);
+document.getElementById(
+"message"
+).innerText=
+data.message;
 
 }
 
@@ -295,9 +305,9 @@ data.message
 async function forgotPassword(){
 
 let email=
-prompt(
-"Enter Email"
-);
+document.getElementById(
+"forgotEmail"
+).value;
 
 const response=
 
@@ -326,37 +336,21 @@ email:email
 const data=
 await response.json();
 
-alert(
+document.getElementById(
+"message"
+).innerText=
 
-"Reset Token:\n"
+"Reset Token: "
 
 +
 
-data.resetToken
+(
+data.resetToken ||
 
+data.message
 );
 
 }
-
-
-
-document.addEventListener(
-
-"keydown",
-
-function(e){
-
-if(
-e.key==="Enter"
-){
-
-login();
-
-}
-
-}
-
-);
 
 </script>
 
