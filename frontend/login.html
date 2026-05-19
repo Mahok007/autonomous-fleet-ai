@@ -111,29 +111,37 @@
 
 <body>
 
-    <div class="login-box">
+ <div class="login-box">
 
-        <h1>🚗 Fleet AI Login</h1>
+<h1>🚗 Fleet AI Login</h1>
 
-        <input
-            type="text"
-            id="username"
-            placeholder="Enter Username"
-        >
+<input
+type="email"
+id="email"
+placeholder="Enter Email"
+>
 
-        <input
-            type="password"
-            id="password"
-            placeholder="Enter Password"
-        >
+<input
+type="password"
+id="password"
+placeholder="Enter Password"
+>
 
-        <button onclick="login()">
-            Login
-        </button>
+<button onclick="login()">
+Login
+</button>
 
-        <div id="message"></div>
+<button onclick="registerUser()">
+Register
+</button>
 
-    </div>
+<button onclick="forgotPassword()">
+Forgot Password
+</button>
+
+<div id="message"></div>
+
+</div>
 
 <script>
 
@@ -141,77 +149,214 @@
 // LOGIN FUNCTION
 // =========================
 
-function login() {
+async function login(){
 
-    let username =
-        document.getElementById("username").value;
+let email=
+document.getElementById(
+"email"
+).value;
 
-    let password =
-        document.getElementById("password").value;
+let password=
+document.getElementById(
+"password"
+).value;
 
-    fetch(
-        "https://autonomous-fleet-ai-1.onrender.com/login",
-        {
+const response=
 
-            method: "POST",
+await fetch(
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+"https://autonomous-fleet-ai-1.onrender.com/auth/login",
 
-            body: JSON.stringify({
+{
 
-                username: username,
-                password: password
+method:"POST",
 
-            })
-        }
-    )
+headers:{
+"Content-Type":"application/json"
+},
 
-    .then(res => res.json())
+body:JSON.stringify({
 
-    .then(data => {
+email:email,
+password:password
 
-        console.log(data);
+})
 
-        if (data.access_token) {
-
-            localStorage.setItem(
-                "token",
-                data.access_token
-            );
-
-            document.getElementById("message")
-                .innerText = "Login Successful...";
-
-            setTimeout(() => {
-
-                window.location.href = "index.html";
-
-            }, 1000);
-
-        } else {
-
-            document.getElementById("message")
-                .style.color = "#ef4444";
-
-            document.getElementById("message")
-                .innerText = "Invalid Username or Password";
-        }
-    });
 }
 
-// =========================
-// ENTER KEY LOGIN
-// =========================
+);
 
-document.addEventListener("keydown", function(event) {
+const data=
+await response.json();
 
-    if (event.key === "Enter") {
+if(data.access_token){
 
-        login();
-    }
-});
+localStorage.setItem(
+"token",
+data.access_token
+);
+
+document.getElementById(
+"message"
+).style.color=
+"#22c55e";
+
+document.getElementById(
+"message"
+).innerText=
+"Login Successful";
+
+setTimeout(()=>{
+
+window.location.href=
+"index.html";
+
+},1000);
+
+}
+
+else{
+
+document.getElementById(
+"message"
+).style.color=
+"#ef4444";
+
+document.getElementById(
+"message"
+).innerText=
+
+data.message ||
+"Login Failed";
+
+}
+
+}
+
+
+
+async function registerUser(){
+
+let username=
+prompt(
+"Enter Username"
+);
+
+let email=
+document.getElementById(
+"email"
+).value;
+
+let password=
+document.getElementById(
+"password"
+).value;
+
+
+const response=
+
+await fetch(
+
+"https://autonomous-fleet-ai-1.onrender.com/auth/register",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+username:username,
+
+email:email,
+
+password:password
+
+})
+
+}
+
+);
+
+const data=
+await response.json();
+
+alert(
+data.message
+);
+
+}
+
+
+
+async function forgotPassword(){
+
+let email=
+prompt(
+"Enter Email"
+);
+
+const response=
+
+await fetch(
+
+"https://autonomous-fleet-ai-1.onrender.com/auth/forgot",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+email:email
+
+})
+
+}
+
+);
+
+const data=
+await response.json();
+
+alert(
+
+"Reset Token:\n"
+
++
+
+data.resetToken
+
+);
+
+}
+
+
+
+document.addEventListener(
+
+"keydown",
+
+function(e){
+
+if(
+e.key==="Enter"
+){
+
+login();
+
+}
+
+}
+
+);
 
 </script>
 
