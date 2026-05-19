@@ -2,6 +2,7 @@
 <html>
 
 <head>
+
 <title>Fleet AI Login</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
@@ -21,39 +22,26 @@ height:100vh;
 .login-box{
 
 width:380px;
-
 background:#1e293b;
-
 padding:40px;
-
 border-radius:20px;
-
 text-align:center;
-
 box-shadow:0 0 25px rgba(0,0,0,.5);
 
 }
 
 h1{
-
 color:#5978ff;
-
 }
 
 input{
 
 width:100%;
-
 padding:14px;
-
 margin-top:15px;
-
 border:none;
-
 border-radius:10px;
-
 box-sizing:border-box;
-
 font-size:16px;
 
 }
@@ -61,21 +49,13 @@ font-size:16px;
 button{
 
 width:100%;
-
 padding:14px;
-
 margin-top:18px;
-
 border:none;
-
 border-radius:10px;
-
 background:#627cff;
-
 color:white;
-
 font-size:18px;
-
 cursor:pointer;
 
 }
@@ -89,7 +69,6 @@ background:#4564ff;
 #message{
 
 margin-top:20px;
-
 font-weight:bold;
 
 }
@@ -108,12 +87,14 @@ font-weight:bold;
 type="email"
 id="email"
 placeholder="Enter Email"
+autocomplete="off"
 >
 
 <input
 type="password"
 id="password"
-placeholder="Password (min 8 characters)"
+placeholder="Password (minimum 8 characters)"
+autocomplete="new-password"
 >
 
 <div id="registerFields">
@@ -122,6 +103,7 @@ placeholder="Password (min 8 characters)"
 type="text"
 id="username"
 placeholder="Username"
+autocomplete="off"
 >
 
 </div>
@@ -130,6 +112,7 @@ placeholder="Username"
 type="email"
 id="forgotEmail"
 placeholder="Recovery Email"
+autocomplete="off"
 >
 
 <button onclick="login()">
@@ -147,7 +130,6 @@ Forgot Password
 <div id="message"></div>
 
 </div>
-
 
 <script>
 
@@ -177,11 +159,11 @@ document.getElementById(
 
 
 if(
-username==""
+!username
 ||
-email==""
+!email
 ||
-password==""
+!password
 ){
 
 alert(
@@ -198,7 +180,7 @@ password.length<8
 ){
 
 alert(
-"Password minimum 8 characters"
+"Password must contain minimum 8 characters"
 );
 
 return;
@@ -222,9 +204,11 @@ headers:{
 
 body:JSON.stringify({
 
-username,
-email,
-password
+username:username,
+
+email:email,
+
+password:password
 
 })
 
@@ -232,13 +216,15 @@ password
 
 );
 
+
 const data=
 await response.json();
 
+console.log(data);
+
 
 if(
-data.message==
-"Registered Successfully"
+response.ok
 ){
 
 alert(
@@ -250,19 +236,27 @@ document.getElementById(
 ).style.display=
 "none";
 
+document.getElementById(
+"message"
+).style.color=
+"#22c55e";
 
 document.getElementById(
 "message"
 ).innerText=
 
-"Now Login";
+"Registration complete. Login now.";
 
 }
 
 else{
 
 alert(
+
 data.message
+||
+"Registration Failed"
+
 );
 
 }
@@ -274,7 +268,7 @@ catch(error){
 console.log(error);
 
 alert(
-"Registration Failed"
+"Backend connection failed"
 );
 
 }
@@ -299,6 +293,21 @@ document.getElementById(
 ).value;
 
 
+if(
+!email
+||
+!password
+){
+
+alert(
+"Enter email and password"
+);
+
+return;
+
+}
+
+
 const response=
 
 await fetch(
@@ -315,8 +324,9 @@ headers:{
 
 body:JSON.stringify({
 
-email,
-password
+email:email,
+
+password:password
 
 })
 
@@ -328,8 +338,12 @@ password
 const data=
 await response.json();
 
+console.log(data);
 
-if(data.access_token){
+
+if(
+data.access_token
+){
 
 localStorage.setItem(
 
@@ -339,11 +353,9 @@ data.access_token
 
 );
 
-
 alert(
 "Login Successful"
 );
-
 
 window.location.href=
 "index.html";
@@ -361,8 +373,8 @@ document.getElementById(
 "message"
 ).innerText=
 
-data.message||
-
+data.message
+||
 "Wrong email or password";
 
 }
@@ -386,17 +398,21 @@ alert(
 
 async function forgotPassword(){
 
+try{
+
 let email=
 
 document.getElementById(
 "forgotEmail"
-).value;
+).value.trim();
 
 
-if(email==""){
+if(
+!email
+){
 
 alert(
-"Enter Email"
+"Enter recovery email"
 );
 
 return;
@@ -420,7 +436,7 @@ headers:{
 
 body:JSON.stringify({
 
-email
+email:email
 
 })
 
@@ -439,7 +455,11 @@ data.resetToken
 
 ?
 
-"Reset Token:\n"+data.resetToken
+"Reset Token:\n"
+
++
+
+data.resetToken
 
 :
 
@@ -449,13 +469,25 @@ data.message
 
 }
 
+catch(error){
+
+console.log(error);
+
+alert(
+"Forgot Password Failed"
+);
+
+}
+
+}
+
 
 
 document.addEventListener(
 
 "keydown",
 
-e=>{
+function(e){
 
 if(
 e.key==="Enter"
@@ -472,4 +504,5 @@ login();
 </script>
 
 </body>
+
 </html>
