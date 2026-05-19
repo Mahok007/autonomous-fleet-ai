@@ -18,16 +18,24 @@ let routingControl;
 // AUTH CHECK
 // =========================
 
-let token =
+let token=
 localStorage.getItem("token");
 
-if(!token){
+if(
 
-window.location.href =
+!token
+
+&&
+
+!window.location.pathname
+.includes("login.html")
+
+){
+
+window.location.href=
 "login.html";
 
 }
-
 let vehicleMarker;
 
 let trafficCircle = null;
