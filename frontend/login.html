@@ -2,7 +2,6 @@
 <html>
 
 <head>
-
 <title>Fleet AI Login</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
@@ -10,45 +9,34 @@
 <style>
 
 body{
-
 margin:0;
-padding:0;
-
 font-family:Poppins;
-
 background:#0f172a;
-
 display:flex;
-
 justify-content:center;
-
 align-items:center;
-
 height:100vh;
-
 }
 
 .login-box{
+
+width:380px;
 
 background:#1e293b;
 
 padding:40px;
 
-border-radius:15px;
-
-width:380px;
-
-box-shadow:0 0 20px rgba(0,0,0,.5);
+border-radius:20px;
 
 text-align:center;
+
+box-shadow:0 0 25px rgba(0,0,0,.5);
 
 }
 
 h1{
 
-color:#4f74ff;
-
-margin-bottom:30px;
+color:#5978ff;
 
 }
 
@@ -56,19 +44,17 @@ input{
 
 width:100%;
 
-padding:12px;
+padding:14px;
 
 margin-top:15px;
 
 border:none;
 
-border-radius:8px;
-
-font-size:15px;
+border-radius:10px;
 
 box-sizing:border-box;
 
-outline:none;
+font-size:16px;
 
 }
 
@@ -76,15 +62,15 @@ button{
 
 width:100%;
 
-padding:12px;
+padding:14px;
 
 margin-top:18px;
 
 border:none;
 
-border-radius:8px;
+border-radius:10px;
 
-background:#5b7cff;
+background:#627cff;
 
 color:white;
 
@@ -96,7 +82,7 @@ cursor:pointer;
 
 button:hover{
 
-background:#3d61f7;
+background:#4564ff;
 
 }
 
@@ -122,28 +108,28 @@ font-weight:bold;
 type="email"
 id="email"
 placeholder="Enter Email"
-autocomplete="off"
 >
 
 <input
 type="password"
 id="password"
-placeholder="Password (minimum 8 characters)"
-autocomplete="new-password"
+placeholder="Password (min 8 characters)"
 >
+
+<div id="registerFields">
 
 <input
 type="text"
 id="username"
-placeholder="Username (registration only)"
-autocomplete="off"
+placeholder="Username"
 >
+
+</div>
 
 <input
 type="email"
 id="forgotEmail"
-placeholder="Email for password recovery"
-autocomplete="off"
+placeholder="Recovery Email"
 >
 
 <button onclick="login()">
@@ -166,130 +152,7 @@ Forgot Password
 <script>
 
 const API=
-
 "https://autonomous-fleet-ai-1.onrender.com/auth";
-
-
-
-async function login(){
-
-try{
-
-console.log(
-"login clicked"
-);
-
-let email=
-document.getElementById(
-"email"
-).value.trim();
-
-let password=
-document.getElementById(
-"password"
-).value;
-
-
-const response=
-
-await fetch(
-
-API+"/login",
-
-{
-
-method:"POST",
-
-headers:{
-
-"Content-Type":"application/json"
-
-},
-
-body:JSON.stringify({
-
-email,
-password
-
-})
-
-}
-
-);
-
-const data=
-await response.json();
-
-console.log(data);
-
-
-if(data.access_token){
-
-localStorage.setItem(
-
-"token",
-
-data.access_token
-
-);
-
-document.getElementById(
-"message"
-).style.color=
-"#22c55e";
-
-document.getElementById(
-"message"
-).innerText=
-"Login Successful";
-
-
-setTimeout(()=>{
-
-window.location.href=
-"index.html";
-
-},1000);
-
-}
-
-else{
-
-document.getElementById(
-"message"
-).style.color=
-"red";
-
-document.getElementById(
-"message"
-).innerText=
-
-data.message ||
-
-"Wrong email or password";
-
-}
-
-}
-
-catch(error){
-
-console.log(error);
-
-document.getElementById(
-"message"
-).style.color=
-"red";
-
-document.getElementById(
-"message"
-).innerText=
-
-"Backend connection failed";
-
-}
-
-}
 
 
 
@@ -335,7 +198,7 @@ password.length<8
 ){
 
 alert(
-"Password must contain minimum 8 characters"
+"Password minimum 8 characters"
 );
 
 return;
@@ -354,9 +217,7 @@ API+"/register",
 method:"POST",
 
 headers:{
-
 "Content-Type":"application/json"
-
 },
 
 body:JSON.stringify({
@@ -371,30 +232,125 @@ password
 
 );
 
-
 const data=
 await response.json();
 
-console.log(data);
 
+if(
+data.message==
+"Registered Successfully"
+){
+
+alert(
+"Registered Successfully"
+);
 
 document.getElementById(
-"message"
-).style.color=
-"#22c55e";
+"registerFields"
+).style.display=
+"none";
 
 
 document.getElementById(
 "message"
 ).innerText=
 
-data.message;
+"Now Login";
+
+}
+
+else{
+
+alert(
+data.message
+);
+
+}
 
 }
 
 catch(error){
 
 console.log(error);
+
+alert(
+"Registration Failed"
+);
+
+}
+
+}
+
+
+
+
+async function login(){
+
+try{
+
+let email=
+document.getElementById(
+"email"
+).value.trim();
+
+let password=
+document.getElementById(
+"password"
+).value;
+
+
+const response=
+
+await fetch(
+
+API+"/login",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+email,
+password
+
+})
+
+}
+
+);
+
+
+const data=
+await response.json();
+
+
+if(data.access_token){
+
+localStorage.setItem(
+
+"token",
+
+data.access_token
+
+);
+
+
+alert(
+"Login Successful"
+);
+
+
+window.location.href=
+"index.html";
+
+}
+
+else{
 
 document.getElementById(
 "message"
@@ -405,28 +361,42 @@ document.getElementById(
 "message"
 ).innerText=
 
-"Registration failed";
+data.message||
+
+"Wrong email or password";
 
 }
 
 }
+
+catch(error){
+
+console.log(error);
+
+alert(
+"Backend connection failed"
+);
+
+}
+
+}
+
 
 
 
 async function forgotPassword(){
 
-try{
-
 let email=
+
 document.getElementById(
 "forgotEmail"
-).value.trim();
+).value;
 
 
 if(email==""){
 
 alert(
-"Enter recovery email"
+"Enter Email"
 );
 
 return;
@@ -445,9 +415,7 @@ API+"/forgot",
 method:"POST",
 
 headers:{
-
 "Content-Type":"application/json"
-
 },
 
 body:JSON.stringify({
@@ -465,33 +433,19 @@ const data=
 await response.json();
 
 
-document.getElementById(
-"message"
-).style.color=
-"orange";
-
-
-document.getElementById(
-"message"
-).innerText=
+alert(
 
 data.resetToken
 
 ?
 
-"Reset token: "+data.resetToken
+"Reset Token:\n"+data.resetToken
 
 :
 
-data.message;
+data.message
 
-}
-
-catch(error){
-
-console.log(error);
-
-}
+);
 
 }
 
@@ -501,7 +455,7 @@ document.addEventListener(
 
 "keydown",
 
-function(e){
+e=>{
 
 if(
 e.key==="Enter"
