@@ -752,6 +752,8 @@ async function startRealTracking(){
 
 tripStarted=true;
 
+await requestStorageAccess();
+
 startCamera();
 
 document.getElementById(
@@ -3116,95 +3118,55 @@ recorder.stop();
 }
 
 /// loop storage
-function saveLoopVideo(blob){
+async function saveLoopVideo(blob){
 
-const tx=
-
-db.transaction(
-
-["videos"],
-
-"readwrite"
-
-);
-
-const store=
-tx.objectStore(
-"videos"
-);
-
-store.add({
-
-video:blob,
-
-time:new Date()
-.toISOString(),
-
-size:blob.size
-
-});
-
-cleanStorage();
-
-}
+if(
+!saveDirectory
+)
+return;
 
 
+const fileName=
 
-function cleanStorage(){
+"dashcam_"
 
-let tx=
++
 
-db.transaction(
+Date.now()
 
-["videos"],
++
 
-"readwrite"
-);
-
-let store=
-tx.objectStore(
-"videos"
-);
-
-let request=
-store.getAll();
-
-request.onsuccess=()=>{
-
-let data=
-request.result;
-
-let total=
-
-data.reduce(
-
-(a,b)=>
-
-a+b.size,
-
-0
-
-);
+".webm";
 
 
-while(
+const fileHandle=
 
-total>
+await saveDirectory.getFileHandle(
 
-1024*1024*1024
+fileName,
 
-){
+{
 
-store.delete(1);
-
-total-=
-
-data[0].size;
-
-data.shift();
+create:true
 
 }
 
-};
+);
+
+
+const writable=
+
+await fileHandle.createWritable();
+
+await writable.write(
+blob
+);
+
+await writable.close();
+
+console.log(
+"Saved:",
+fileName
+);
 
 }
