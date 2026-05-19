@@ -162,9 +162,7 @@ async def forgot(
 data:ForgotPassword
 ):
 
-    user=
-
-    await users.find_one({
+    user= await users.find_one({
 
         "email":
         data.email
@@ -182,9 +180,7 @@ data:ForgotPassword
         }
 
 
-    token=
-
-    secrets.token_hex(
+    token= secrets.token_hex(
         32
     )
 
@@ -234,9 +230,7 @@ data:ResetPassword
 
 ):
 
-    user=
-
-    await users.find_one({
+    user= await users.find_one({
 
         "reset":
         token
@@ -254,9 +248,7 @@ data:ResetPassword
         }
 
 
-    hashed=
-
-    pwd.hash(
+    hashed= pwd.hash(
         data.password
     )
 

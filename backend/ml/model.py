@@ -22,3 +22,31 @@ def predict_action(speed, distance, weather):
         "brake_prob": round(probs[0] * 100, 2),
         "accelerate_prob": round(probs[1] * 100, 2)
     }
+
+from pydantic import BaseModel, EmailStr
+
+
+class RegisterUser(BaseModel):
+
+    username:str
+
+    email:EmailStr
+
+    password:str
+
+
+class LoginUser(BaseModel):
+
+    email:EmailStr
+
+    password:str
+
+
+class ForgotPassword(BaseModel):
+
+    email:EmailStr
+
+
+class ResetPassword(BaseModel):
+
+    password:str
