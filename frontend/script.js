@@ -49,6 +49,20 @@ let eyeClosedStart=null;
 
 let drowsyTriggered=false;
 
+let roadStream;
+
+let driverStream;
+
+let db;
+
+let recorder;
+
+let recordings=[];
+
+let totalSize=0;
+
+let chunks=[];
+
 function updateSafetyScore(){
 
 let score=
@@ -90,6 +104,8 @@ const API_BASE =
 
 
 window.onload = function () {
+
+    initDB();
 
     initializeMap();
 
@@ -2176,20 +2192,9 @@ speech
 
 async function startCamera(){
 
-let cam=
-document.getElementById(
-"camera"
-);
-
-if(!cam) return;
-
 try{
 
-let stream;
-
-try{
-
-stream=
+roadStream=
 
 await navigator
 .mediaDevices
@@ -2197,77 +2202,53 @@ await navigator
 
 video:{
 
-width:{
-ideal:1280
-},
-
-height:{
-ideal:720
-},
-
-facingMode:
-navigator.userAgent.includes("Mobile")
-
-?
-
-{
+facingMode:{
 ideal:"environment"
 }
 
-:
-
-"user"
-
 },
-audio: false
+
+audio:false
+
 });
 
-}
 
-catch(e){
-
-stream=
+driverStream=
 
 await navigator
 .mediaDevices
 .getUserMedia({
 
-video: true,
-audio: false
+video:{
+
+facingMode:"user"
+
+},
+
+audio:false
+
 });
-
-}
-
-cam.srcObject=
-stream;
-
-
-await new Promise(
-
-resolve=>{
-
-cam.onloadedmetadata=
-resolve;
-
-}
-
-);
-
-await cam.play();
 
 
 document
 .getElementById(
-"emotion"
+"roadCam"
 )
-.innerText=
-"Loading AI...";
+.srcObject=
+roadStream;
+
+
+document
+.getElementById(
+"driverCam"
+)
+.srcObject=
+driverStream;
 
 
 await loadFaceModels();
 
 await loadObjects();
-
 
 setTimeout(()=>{
 
@@ -2279,22 +2260,9 @@ startEyeDetection();
 
 startEmotionDetection();
 
+startDashcam();
+
 detectionRunning=true;
-
-}
-
-},3000);
-
-
-setInterval(()=>{
-
-if(
-cam.readyState===4
-){
-
-detectLane();
-
-detectRoad();
 
 }
 
@@ -2307,7 +2275,7 @@ catch(error){
 console.log(error);
 
 alert(
-"Camera not available"
+"Camera unavailable"
 );
 
 }
@@ -2407,7 +2375,7 @@ async()=>{
 let cam=
 
 document.getElementById(
-"camera"
+"driverCam"
 );
 
 if(!cam)
@@ -2574,7 +2542,7 @@ async()=>{
 
 let cam=
 document.getElementById(
-"camera"
+"driverCam"
 );
 
 if(
@@ -2732,7 +2700,7 @@ async function detectObjects(){
 
 const cam=
 document.getElementById(
-"camera"
+"driverCam"
 );
 
 if(
@@ -2823,7 +2791,7 @@ async function detectLane(){
 
 const cam=
 document.getElementById(
-"camera"
+"driverCam"
 );
 
 if(!cam)
@@ -2906,7 +2874,7 @@ async function detectRoad(){
 
 const cam=
 document.getElementById(
-"camera"
+"driverCam"
 );
 
 if(!cam)
@@ -2979,5 +2947,264 @@ data.road;
 }
 
 );
+
+}
+
+/// DB function
+function initDB(){
+
+const request=
+
+indexedDB.open(
+"DashcamDB",
+1
+);
+
+request.onupgradeneeded=(e)=>{
+
+db=
+e.target.result;
+
+db.createObjectStore(
+
+"videos",
+
+{
+autoIncrement:true
+}
+
+);
+
+};
+
+request.onsuccess=(e)=>{
+
+db=
+e.target.result;
+
+console.log(
+"Dashcam Storage Ready"
+);
+
+};
+
+}
+
+/// dual recording
+function startDashcam(){
+
+const road=
+document.getElementById(
+"roadCam"
+);
+
+const driver=
+document.getElementById(
+"driverCam"
+);
+
+const canvas=
+document.createElement(
+"canvas"
+);
+
+canvas.width=1280;
+
+canvas.height=720;
+
+const ctx=
+canvas.getContext(
+"2d"
+);
+
+
+setInterval(()=>{
+
+ctx.drawImage(
+road,
+0,
+0,
+960,
+720
+);
+
+ctx.drawImage(
+driver,
+980,
+20,
+280,
+180
+);
+
+
+ctx.fillStyle=
+"white";
+
+ctx.font=
+"20px Arial";
+
+ctx.fillText(
+
+new Date()
+.toLocaleString(),
+
+20,
+30
+
+);
+
+},100);
+
+
+const stream=
+canvas.captureStream(
+30
+);
+
+
+recorder=
+
+new MediaRecorder(
+stream
+);
+
+
+recorder.ondataavailable=(e)=>{
+
+chunks.push(
+e.data
+);
+
+};
+
+
+recorder.onstop=()=>{
+
+let blob=
+
+new Blob(
+
+chunks,
+
+{
+type:"video/webm"
+}
+
+);
+
+chunks=[];
+
+saveLoopVideo(
+blob
+);
+
+};
+
+
+setInterval(()=>{
+
+recorder.start();
+
+setTimeout(()=>{
+
+recorder.stop();
+
+},60000);
+
+},61000);
+
+}
+
+/// loop storage
+function saveLoopVideo(blob){
+
+const tx=
+
+db.transaction(
+
+["videos"],
+
+"readwrite"
+
+);
+
+const store=
+tx.objectStore(
+"videos"
+);
+
+store.add({
+
+video:blob,
+
+time:new Date()
+.toISOString(),
+
+size:blob.size
+
+});
+
+cleanStorage();
+
+}
+
+
+
+function cleanStorage(){
+
+let tx=
+
+db.transaction(
+
+["videos"],
+
+"readwrite"
+);
+
+let store=
+tx.objectStore(
+"videos"
+);
+
+let request=
+store.getAll();
+
+request.onsuccess=()=>{
+
+let data=
+request.result;
+
+let total=
+
+data.reduce(
+
+(a,b)=>
+
+a+b.size,
+
+0
+
+);
+
+
+while(
+
+total>
+
+1024*1024*1024
+
+){
+
+store.delete(1);
+
+total-=
+
+data[0].size;
+
+data.shift();
+
+}
+
+};
 
 }
