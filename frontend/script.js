@@ -9,8 +9,7 @@ if (!localStorage.getItem("token")) {
 // =========================
 // GLOBAL VARIABLES
 // =========================
- 
-const API_BASE = "https://autonomous-fleet-ai-1.onrender.com";
+ const API_BASE = "https://autonomous-fleet-ai.onrender.com";
  
 let map;
 let routingControl;
