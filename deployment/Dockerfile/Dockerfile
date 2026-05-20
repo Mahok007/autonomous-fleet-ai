@@ -3,9 +3,8 @@ FROM python:3.11
 WORKDIR /app
 
 COPY requirements.txt .
-
 RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000", "--app-dir", "backend"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]
