@@ -1,508 +1,332 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
+ 
 <head>
-
-<title>Fleet AI Login</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-
-<style>
-
-body{
-margin:0;
-font-family:Poppins;
-background:#0f172a;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.login-box{
-
-width:380px;
-background:#1e293b;
-padding:40px;
-border-radius:20px;
-text-align:center;
-box-shadow:0 0 25px rgba(0,0,0,.5);
-
-}
-
-h1{
-color:#5978ff;
-}
-
-input{
-
-width:100%;
-padding:14px;
-margin-top:15px;
-border:none;
-border-radius:10px;
-box-sizing:border-box;
-font-size:16px;
-
-}
-
-button{
-
-width:100%;
-padding:14px;
-margin-top:18px;
-border:none;
-border-radius:10px;
-background:#627cff;
-color:white;
-font-size:18px;
-cursor:pointer;
-
-}
-
-button:hover{
-
-background:#4564ff;
-
-}
-
-#message{
-
-margin-top:20px;
-font-weight:bold;
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleet AI Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+ 
+  <style>
+    * { box-sizing: border-box; }
+ 
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+ 
+    .login-box {
+      width: 400px;
+      background: #1e293b;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+ 
+    h1 { color: #5978ff; margin-top: 0; font-size: 26px; }
+    h2 { color: #94a3b8; font-size: 15px; font-weight: normal; margin: 4px 0 20px; }
+ 
+    .panel { display: none; }
+    .panel.active { display: block; }
+ 
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Poppins', sans-serif;
+      background: #0f172a;
+      color: white;
+      outline: none;
+    }
+    input::placeholder { color: #64748b; }
+    input:focus { box-shadow: 0 0 0 2px #627cff; }
+ 
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+ 
+    .btn-primary   { background: #627cff; color: white; }
+    .btn-primary:hover { background: #4564ff; }
+    .btn-secondary { background: #334155; color: white; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger    { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-success   { background: #16a34a; color: white; }
+    .btn-success:hover { background: #15803d; }
+ 
+    .btn-link {
+      background: none;
+      color: #627cff;
+      font-size: 13px;
+      padding: 6px;
+      margin-top: 4px;
+      text-decoration: underline;
+      width: auto;
+    }
+    .btn-link:hover { color: #4564ff; background: none; }
+ 
+    .msg {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: bold;
+      min-height: 18px;
+      line-height: 1.4;
+    }
+ 
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #ffffff44;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+ 
+    .back-link {
+      display: block;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .back-link:hover { color: #94a3b8; }
+ 
+    .big-icon { font-size: 56px; margin-bottom: 8px; }
+  </style>
 </head>
-
+ 
 <body>
-
 <div class="login-box">
-
-<h1>🚗 Fleet AI Login</h1>
-
-<input
-type="email"
-id="email"
-placeholder="Enter Email"
-autocomplete="off"
->
-
-<input
-type="password"
-id="password"
-placeholder="Password (minimum 8 characters)"
-autocomplete="new-password"
->
-
-<div id="registerFields">
-
-<input
-type="text"
-id="username"
-placeholder="Username"
-autocomplete="off"
->
-
+ 
+  <h1>🚗 Fleet AI</h1>
+ 
+  <!-- ======= LOGIN ======= -->
+  <div id="panelLogin" class="panel active">
+    <h2>Sign in to your account</h2>
+    <input type="email"    id="loginEmail"    placeholder="Email address" autocomplete="off">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <button class="btn-primary"   id="btnLogin" onclick="login()">🔐 Login</button>
+    <button class="btn-secondary" onclick="showPanel('panelRegister')">📝 Create Account</button>
+    <button class="btn-link"      onclick="showPanel('panelForgot')">Forgot password?</button>
+    <div class="msg" id="msgLogin"></div>
+  </div>
+ 
+  <!-- ======= REGISTER ======= -->
+  <div id="panelRegister" class="panel">
+    <h2>Create a new account</h2>
+    <input type="text"     id="regUsername" placeholder="Username" autocomplete="off">
+    <input type="email"    id="regEmail"    placeholder="Email address" autocomplete="off">
+    <input type="password" id="regPassword" placeholder="Password (min. 8 characters)" autocomplete="new-password">
+    <input type="password" id="regConfirm"  placeholder="Confirm password" autocomplete="new-password">
+    <button class="btn-success" id="btnRegister" onclick="registerUser()">✅ Register</button>
+    <span class="back-link" onclick="showPanel('panelLogin')">← Back to Login</span>
+    <div class="msg" id="msgRegister"></div>
+  </div>
+ 
+  <!-- ======= FORGOT PASSWORD ======= -->
+  <div id="panelForgot" class="panel">
+    <h2>Reset your password</h2>
+    <p style="color:#94a3b8;font-size:13px;margin-top:0;">Enter your registered email address below.</p>
+    <input type="email" id="forgotEmail" placeholder="Registered email address" autocomplete="off">
+    <button class="btn-danger" id="btnForgot" onclick="forgotPassword()">📨 Send Reset Link</button>
+    <span class="back-link" onclick="showPanel('panelLogin')">← Back to Login</span>
+    <div class="msg" id="msgForgot"></div>
+  </div>
+ 
+  <!-- ======= REGISTER SUCCESS ======= -->
+  <div id="panelRegSuccess" class="panel">
+    <div class="big-icon">✅</div>
+    <h2 style="color:#22c55e;font-size:18px;font-weight:bold;">Registered Successfully!</h2>
+    <p style="color:#94a3b8;font-size:14px;">Your account is ready. Log in to get started.</p>
+    <button class="btn-primary" onclick="showPanel('panelLogin')">🔐 Go to Login</button>
+  </div>
+ 
+  <!-- ======= FORGOT SUCCESS ======= -->
+  <div id="panelForgotSuccess" class="panel">
+    <div class="big-icon">📧</div>
+    <h2 style="color:#facc15;font-size:18px;font-weight:bold;">Check Your Email</h2>
+    <p style="color:#94a3b8;font-size:14px;">
+      A password reset link has been sent.<br>
+      Click the link in your email to set a new password.
+    </p>
+    <p style="color:#64748b;font-size:12px;">Didn't get it? Check your spam folder.</p>
+    <button class="btn-secondary" onclick="showPanel('panelLogin')">← Back to Login</button>
+  </div>
+ 
 </div>
-
-<input
-type="email"
-id="forgotEmail"
-placeholder="Recovery Email"
-autocomplete="off"
->
-
-<button onclick="login()">
-Login
-</button>
-
-<button onclick="registerUser()">
-Register
-</button>
-
-<button onclick="forgotPassword()">
-Forgot Password
-</button>
-
-<div id="message"></div>
-
-</div>
-
+ 
 <script>
-
-const API=
-"https://autonomous-fleet-ai-1.onrender.com/auth";
-
-
-
-async function registerUser(){
-
-try{
-
-let username=
-document.getElementById(
-"username"
-).value.trim();
-
-let email=
-document.getElementById(
-"email"
-).value.trim();
-
-let password=
-document.getElementById(
-"password"
-).value;
-
-
-if(
-!username
-||
-!email
-||
-!password
-){
-
-alert(
-"Fill all fields"
-);
-
-return;
-
-}
-
-
-if(
-password.length<8
-){
-
-alert(
-"Password must contain minimum 8 characters"
-);
-
-return;
-
-}
-
-
-const response=
-
-await fetch(
-
-API+"/register",
-
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-username:username,
-
-email:email,
-
-password:password
-
-})
-
-}
-
-);
-
-
-const data=
-await response.json();
-
-console.log(data);
-
-
-if(
-response.ok
-){
-
-alert(
-"Registered Successfully"
-);
-
-document.getElementById(
-"registerFields"
-).style.display=
-"none";
-
-document.getElementById(
-"message"
-).style.color=
-"#22c55e";
-
-document.getElementById(
-"message"
-).innerText=
-
-"Registration complete. Login now.";
-
-}
-
-else{
-
-alert(
-
-data.message
-||
-"Registration Failed"
-
-);
-
-}
-
-}
-
-catch(error){
-
-console.log(error);
-
-alert(
-"Backend connection failed"
-);
-
-}
-
-}
-
-
-
-
-async function login(){
-
-try{
-
-let email=
-document.getElementById(
-"email"
-).value.trim();
-
-let password=
-document.getElementById(
-"password"
-).value;
-
-
-if(
-!email
-||
-!password
-){
-
-alert(
-"Enter email and password"
-);
-
-return;
-
-}
-
-
-const response=
-
-await fetch(
-
-API+"/login",
-
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-email:email,
-
-password:password
-
-})
-
-}
-
-);
-
-
-const data=
-await response.json();
-
-console.log(data);
-
-
-if(
-data.access_token
-){
-
-localStorage.setItem(
-
-"token",
-
-data.access_token
-
-);
-
-alert(
-"Login Successful"
-);
-
-window.location.href=
-"index.html";
-
-}
-
-else{
-
-document.getElementById(
-"message"
-).style.color=
-"red";
-
-document.getElementById(
-"message"
-).innerText=
-
-data.message
-||
-"Wrong email or password";
-
-}
-
-}
-
-catch(error){
-
-console.log(error);
-
-alert(
-"Backend connection failed"
-);
-
-}
-
-}
-
-
-
-
-async function forgotPassword(){
-
-try{
-
-let email=
-
-document.getElementById(
-"forgotEmail"
-).value.trim();
-
-
-if(
-!email
-){
-
-alert(
-"Enter recovery email"
-);
-
-return;
-
-}
-
-
-const response=
-
-await fetch(
-
-API+"/forgot",
-
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-email:email
-
-})
-
-}
-
-);
-
-
-const data=
-await response.json();
-
-
-alert(
-
-data.resetToken
-
-?
-
-"Reset Token:\n"
-
-+
-
-data.resetToken
-
-:
-
-data.message
-
-);
-
-}
-
-catch(error){
-
-console.log(error);
-
-alert(
-"Forgot Password Failed"
-);
-
-}
-
-}
-
-
-
-document.addEventListener(
-
-"keydown",
-
-function(e){
-
-if(
-e.key==="Enter"
-){
-
-login();
-
-}
-
-}
-
-);
-
+  const API = "https://autonomous-fleet-ai-1.onrender.com/auth";
+ 
+  function showPanel(id) {
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+ 
+  function showMsg(msgId, text, color) {
+    let el = document.getElementById(msgId);
+    if (!el) return;
+    el.style.color = color || "white";
+    el.innerHTML = text;
+  }
+ 
+  function setLoading(btn, loading, original) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span class="spinner"></span>Please wait...'
+      : original;
+  }
+ 
+  // =====================
+  // REGISTER
+  // =====================
+  async function registerUser() {
+    let btn = document.getElementById("btnRegister");
+ 
+    let username = document.getElementById("regUsername").value.trim();
+    let email    = document.getElementById("regEmail").value.trim();
+    let password = document.getElementById("regPassword").value;
+    let confirm  = document.getElementById("regConfirm").value;
+ 
+    if (!username || !email || !password || !confirm) {
+      showMsg("msgRegister", "⚠ Please fill in all fields.", "orange"); return;
+    }
+    if (password.length < 8) {
+      showMsg("msgRegister", "⚠ Password must be at least 8 characters.", "orange"); return;
+    }
+    if (password !== confirm) {
+      showMsg("msgRegister", "⚠ Passwords do not match.", "orange"); return;
+    }
+ 
+    setLoading(btn, true, "✅ Register");
+ 
+    try {
+      const res  = await fetch(API + "/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+ 
+      if (res.ok) {
+        showPanel("panelRegSuccess");
+      } else {
+        let msg = data.detail?.message || data.message || "Registration failed.";
+        showMsg("msgRegister", "❌ " + msg, "#f87171");
+      }
+    } catch (e) {
+      console.error(e);
+      showMsg("msgRegister", "❌ Could not reach server. Is the backend running?", "#f87171");
+    } finally {
+      setLoading(btn, false, "✅ Register");
+    }
+  }
+ 
+  // =====================
+  // LOGIN
+  // =====================
+  async function login() {
+    let btn = document.getElementById("btnLogin");
+ 
+    let email    = document.getElementById("loginEmail").value.trim();
+    let password = document.getElementById("loginPassword").value;
+ 
+    if (!email || !password) {
+      showMsg("msgLogin", "⚠ Enter email and password.", "orange"); return;
+    }
+ 
+    setLoading(btn, true, "🔐 Login");
+ 
+    try {
+      const res  = await fetch(API + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+ 
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        if (data.username) localStorage.setItem("username", data.username);
+        showMsg("msgLogin", "✅ Login successful! Redirecting...", "#22c55e");
+        setTimeout(() => { window.location.href = "index.html"; }, 900);
+      } else {
+        let msg = data.detail?.message || data.message || "Wrong email or password.";
+        showMsg("msgLogin", "❌ " + msg, "#f87171");
+      }
+    } catch (e) {
+      console.error(e);
+      showMsg("msgLogin", "❌ Could not reach server. Is the backend running?", "#f87171");
+    } finally {
+      setLoading(btn, false, "🔐 Login");
+    }
+  }
+ 
+  // =====================
+  // FORGOT PASSWORD
+  // =====================
+  async function forgotPassword() {
+    let btn   = document.getElementById("btnForgot");
+    let email = document.getElementById("forgotEmail").value.trim();
+ 
+    if (!email) {
+      showMsg("msgForgot", "⚠ Enter your registered email.", "orange"); return;
+    }
+ 
+    setLoading(btn, true, "📨 Send Reset Link");
+ 
+    try {
+      const res  = await fetch(API + "/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+ 
+      if (res.ok) {
+        showPanel("panelForgotSuccess");
+      } else {
+        let msg = data.detail?.message || data.message || "Email not found.";
+        showMsg("msgForgot", "❌ " + msg, "#f87171");
+      }
+    } catch (e) {
+      console.error(e);
+      showMsg("msgForgot", "❌ Could not reach server.", "#f87171");
+    } finally {
+      setLoading(btn, false, "📨 Send Reset Link");
+    }
+  }
+ 
+  // Enter key support per panel
+  document.addEventListener("keydown", function(e) {
+    if (e.key !== "Enter") return;
+    let active = document.querySelector(".panel.active")?.id;
+    if (active === "panelLogin")    login();
+    if (active === "panelRegister") registerUser();
+    if (active === "panelForgot")   forgotPassword();
+  });
 </script>
-
+ 
 </body>
-
 </html>
