@@ -9,7 +9,7 @@ if (!localStorage.getItem("token")) {
 // =========================
 // GLOBAL VARIABLES
 // =========================
- const API_BASE = "https://autonomous-fleet-ai.onrender.com";
+ const API = "https://autonomous-fleet-ai-1.onrender.com/auth";
  
 let map;
 let routingControl;
@@ -275,8 +275,7 @@ async function findRoute() {
  
 async function startRealTracking() {
   tripStarted = true;
- 
-  await requestStorageAccess();
+
   startCamera();
  
   document.getElementById("tripStatus").innerText = "TRIP STARTED";
@@ -404,22 +403,45 @@ async function startRealTracking() {
 // =========================
 // STOP TRIP
 // =========================
- 
+
 function stopTrip() {
+  // Stop GPS
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
- 
+
+  // Save trip history
   let allTrips = JSON.parse(localStorage.getItem("tripHistory")) || [];
   allTrips.push(tripData);
   localStorage.setItem("tripHistory", JSON.stringify(allTrips));
- 
+
+  // Stop cameras
+  if (roadStream) {
+    roadStream.getTracks().forEach(track => track.stop());
+    roadStream = null;
+    document.getElementById("roadCam").srcObject = null;
+  }
+
+  if (driverStream) {
+    driverStream.getTracks().forEach(track => track.stop());
+    driverStream = null;
+    document.getElementById("driverCam").srcObject = null;
+  }
+
+  // Stop recording and save
+  if (recorder && recorder.state === "recording") {
+    recorder.stop();
+  }
+
+  detectionRunning = false;
   tripStarted = false;
   tripData = [];
- 
+
   document.getElementById("tripStatus").innerText = "TRIP ENDED";
   document.getElementById("tripStatus").style.color = "#ef4444";
+
+  alert("Trip ended. Recording saved.");
 }
  
 // =========================
@@ -755,40 +777,54 @@ function logout() {
 // =========================
 // CAMERA START
 // =========================
- 
+
 async function startCamera() {
   try {
-    roadStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    });
- 
-    driverStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-      audio: false
-    });
- 
-    document.getElementById("roadCam").srcObject   = roadStream;
-    document.getElementById("driverCam").srcObject = driverStream;
- 
-    await loadFaceModels();
-    await loadObjects();
- 
-    setTimeout(() => {
-      if (!detectionRunning) {
-        startEyeDetection();
-        startEmotionDetection();
-        startDashcam();
-        detectionRunning = true;
-      }
-    }, 3000);
- 
+    // Try back camera first (road)
+    try {
+      roadStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false
+      });
+      document.getElementById("roadCam").srcObject = roadStream;
+    } catch (e) {
+      console.log("Back camera unavailable:", e);
+    }
+
+    // Try front camera (driver)
+    try {
+      driverStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "user" } },
+        audio: false
+      });
+      document.getElementById("driverCam").srcObject = driverStream;
+    } catch (e) {
+      console.log("Front camera unavailable:", e);
+    }
+
+    // If at least one camera works
+    if (roadStream || driverStream) {
+      await loadFaceModels();
+      await loadObjects();
+
+      setTimeout(() => {
+        if (!detectionRunning) {
+          if (driverStream) {
+            startEyeDetection();
+            startEmotionDetection();
+          }
+          startDashcam();
+          detectionRunning = true;
+        }
+      }, 3000);
+    } else {
+      alert("No camera available on this device");
+    }
+
   } catch (error) {
-    console.log(error);
-    alert("Camera unavailable");
+    console.log("Camera error:", error);
   }
 }
- 
 // =========================
 // LOAD FACE API MODELS
 // =========================
@@ -983,64 +1019,45 @@ function initDB() {
 // =========================
 // DASHCAM DUAL RECORDING
 // =========================
- 
+
 function startDashcam() {
-  const road   = document.getElementById("roadCam");
-  const driver = document.getElementById("driverCam");
- 
   const canvas = document.createElement("canvas");
   canvas.width  = 1280;
   canvas.height = 720;
   const ctx = canvas.getContext("2d");
- 
+
   setInterval(() => {
-    ctx.drawImage(road,   0,   0, 960, 720);
-    ctx.drawImage(driver, 980, 20, 280, 180);
+    const road   = document.getElementById("roadCam");
+    const driver = document.getElementById("driverCam");
+
+    if (road && road.srcObject)   ctx.drawImage(road,   0,   0, 960, 720);
+    if (driver && driver.srcObject) ctx.drawImage(driver, 980, 20, 280, 180);
+
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
     ctx.fillText(new Date().toLocaleString(), 20, 30);
   }, 100);
- 
+
   const stream = canvas.captureStream(30);
   recorder = new MediaRecorder(stream);
- 
-  recorder.ondataavailable = (e) => chunks.push(e.data);
- 
+  chunks = [];
+
+  recorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+
   recorder.onstop = () => {
     let blob = new Blob(chunks, { type: "video/webm" });
     chunks = [];
-    saveLoopVideo(blob);
+
+    // Auto download the recording
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dashcam_" + Date.now() + ".webm";
+    a.click();
+    URL.revokeObjectURL(url);
   };
- 
-  setInterval(() => {
-    recorder.start();
-    setTimeout(() => recorder.stop(), 60000);
-  }, 61000);
-}
- 
-// =========================
-// REQUEST STORAGE ACCESS
-// =========================
- 
-async function requestStorageAccess() {
-  try {
-    saveDirectory = await window.showDirectoryPicker();
-  } catch (e) {
-    console.log("Storage access denied or not supported", e);
-  }
-}
- 
-// =========================
-// SAVE LOOP VIDEO
-// =========================
- 
-async function saveLoopVideo(blob) {
-  if (!saveDirectory) return;
- 
-  const fileName = "dashcam_" + Date.now() + ".webm";
-  const fileHandle = await saveDirectory.getFileHandle(fileName, { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(blob);
-  await writable.close();
-  console.log("Saved:", fileName);
+
+  recorder.start();
 }
