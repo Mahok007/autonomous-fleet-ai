@@ -95,7 +95,12 @@ window.onload = function () {
       if (e.key === "Enter") findRoute();
     });
   }
+  // Fix map size after full page load
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 1000);
 };
+
  
 // =========================
 // INITIALIZE MAP
@@ -103,19 +108,24 @@ window.onload = function () {
  
 function initializeMap() {
   if (!document.getElementById("map")) return;
- 
+
   map = L.map("map").setView([20.5937, 78.9629], 5);
- 
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap"
   }).addTo(map);
- 
+
+  // Add this line to fix map not rendering on Vercel
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 500);
+
   let blueIcon = L.icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
     iconSize: [35, 35],
     iconAnchor: [17, 35]
   });
- 
+
   vehicleMarker = L.marker([20.5937, 78.9629], { icon: blueIcon }).addTo(map);
 }
  
