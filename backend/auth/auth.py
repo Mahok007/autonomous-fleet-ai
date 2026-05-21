@@ -16,7 +16,7 @@ except ImportError:
 router = APIRouter()
 
 SECRET = "fleetai_secret"
-APP_URL = "https://autonomous-fleet-ai-1.onrender.com"
+APP_URL = "https://autonomous-fleet-ai-iof5.vercel.app"
 
 pwd = CryptContext(schemes=["bcrypt"])
 
