@@ -12,4 +12,4 @@ pandas
 scikit-learn
 numpy
 joblib
-resend
+sib-api-v3-sdk

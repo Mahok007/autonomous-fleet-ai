@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import jwt
-import resend
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 import datetime
 import secrets
 import os
@@ -16,8 +17,6 @@ router = APIRouter()
 
 SECRET = "fleetai_secret"
 APP_URL = "https://autonomous-fleet-ai-1.onrender.com"
-
-resend.api_key = os.environ.get("RESEND_API_KEY")
 
 pwd = CryptContext(schemes=["bcrypt"])
 
@@ -47,11 +46,18 @@ class ResetPassword(BaseModel):
 # =========================
 
 def send_reset_email(to_email: str, reset_link: str):
-    resend.Emails.send({
-        "from": "Fleet AI <onboarding@resend.dev>",
-        "to": to_email,
-        "subject": "Reset your Fleet AI password",
-        "html": f"""
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = os.environ.get("BREVO_API_KEY")
+
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+        sib_api_v3_sdk.ApiClient(configuration)
+    )
+
+    email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": to_email}],
+        sender={"email": "sarthaksarkar29@gmail.com", "name": "Fleet AI"},
+        subject="Reset your Fleet AI password",
+        html_content=f"""
         <div style="font-family:sans-serif;max-width:480px;margin:auto;
                     background:#1e293b;padding:32px;border-radius:16px;color:white;">
           <h2 style="color:#627cff;">Fleet AI</h2>
@@ -72,7 +78,9 @@ def send_reset_email(to_email: str, reset_link: str):
           </p>
         </div>
         """
-    })
+    )
+
+    api_instance.send_transac_email(email)
 
 
 # =========================
