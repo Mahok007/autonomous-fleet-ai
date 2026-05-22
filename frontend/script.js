@@ -10,7 +10,7 @@ if (!localStorage.getItem("token")) {
 // GLOBAL VARIABLES
 // =========================
 
-const API_BASE = "https://autonomous-fleet-ai-1.onrender.com";  // ← single source of truth
+const API_BASE = "https://autonomous-fleet-ai-1.onrender.com";
 
 let map;
 let routingControl;
@@ -52,13 +52,16 @@ let db;
 let recorder;
 let chunks = [];
 
+// Hidden canvas for face-api to read from
+let faceCanvas = null;
+let faceCtx    = null;
+
 // =========================
 // WINDOW LOAD
 // =========================
 
 window.onload = function () {
 
-  // Night mode
   let hour = new Date().getHours();
   if (hour >= 18 || hour <= 6) {
     document.body.style.filter = "brightness(0.8) contrast(1.3)";
@@ -70,7 +73,6 @@ window.onload = function () {
   createGauge();
   loadData();
 
-  // Get current location for traffic on load
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (position) {
@@ -88,7 +90,6 @@ window.onload = function () {
     );
   }
 
-  // Enter key on destination
   let endInput = document.getElementById("endLocation");
   if (endInput) {
     endInput.addEventListener("keypress", function (e) {
@@ -178,6 +179,7 @@ function updateSafetyScore() {
 // =========================
 // FIND ROUTE
 // =========================
+
 async function findRoute() {
   try {
     let start = document.getElementById("startLocation").value.trim();
@@ -224,14 +226,9 @@ async function findRoute() {
           { color: "#00ffff", weight: 10, opacity: 0.9 },
           { color: "#38bdf8", weight: 5 }
         ]
-      },
-      router: L.Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1",
-        language: "en"
-      })
+      }
     }).addTo(map);
 
-    // Hide direction panel
     setTimeout(() => {
       let panel = document.querySelector(".leaflet-routing-container");
       if (panel) panel.style.display = "none";
@@ -303,7 +300,6 @@ async function startRealTracking() {
     } catch (error) { console.log(error); }
   }
 
-  // Real GPS mode
   watchId = navigator.geolocation.watchPosition(
     function (position) {
       let lat = position.coords.latitude;
@@ -369,26 +365,15 @@ async function startRealTracking() {
 function stopTrip() {
   if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
 
-  // Save trip to history
   let allTrips = JSON.parse(localStorage.getItem("tripHistory")) || [];
   allTrips.push(tripData);
   localStorage.setItem("tripHistory", JSON.stringify(allTrips));
 
-  // Stop cameras
-  if (roadStream) {
-    roadStream.getTracks().forEach(track => track.stop());
-    roadStream = null;
-    document.getElementById("roadCam").srcObject = null;
-  }
-  if (driverStream) {
-    driverStream.getTracks().forEach(track => track.stop());
-    driverStream = null;
-    document.getElementById("driverCam").srcObject = null;
-  }
-
-  // Stop recording → triggers onstop → downloads the file
+  // Stop recorder first, cameras stop inside onstop
   if (recorder && recorder.state === "recording") {
     recorder.stop();
+  } else {
+    stopCameras();
   }
 
   detectionRunning = false;
@@ -397,6 +382,25 @@ function stopTrip() {
 
   document.getElementById("tripStatus").innerText = "TRIP ENDED";
   document.getElementById("tripStatus").style.color = "#ef4444";
+}
+
+// =========================
+// STOP CAMERAS
+// =========================
+
+function stopCameras() {
+  if (roadStream) {
+    roadStream.getTracks().forEach(t => t.stop());
+    roadStream = null;
+    const v = document.getElementById("roadCam");
+    if (v) v.srcObject = null;
+  }
+  if (driverStream) {
+    driverStream.getTracks().forEach(t => t.stop());
+    driverStream = null;
+    const v = document.getElementById("driverCam");
+    if (v) v.srcObject = null;
+  }
 }
 
 // =========================
@@ -411,10 +415,10 @@ async function downloadTripReport() {
     pdf.setFontSize(22);
     pdf.text("Fleet AI Report", 20, 20);
     pdf.setFontSize(12);
-    pdf.text("Trip Points: "          + tripData.length,    20, 40);
-    pdf.text("Brake Events: "         + totalBrakeEvents,   20, 55);
-    pdf.text("Acceleration Events: "  + totalAccelEvents,   20, 70);
-    pdf.text("Generated: "            + new Date().toLocaleString(), 20, 85);
+    pdf.text("Trip Points: "         + tripData.length,   20, 40);
+    pdf.text("Brake Events: "        + totalBrakeEvents,  20, 55);
+    pdf.text("Acceleration Events: " + totalAccelEvents,  20, 70);
+    pdf.text("Generated: "           + new Date().toLocaleString(), 20, 85);
 
     map.invalidateSize();
     await new Promise(resolve => setTimeout(resolve, 3000));
@@ -455,7 +459,9 @@ async function getTrafficData(lat, lng) {
       trafficLevel.innerText = "Low"; trafficDelay.innerText = "0 mins"; return;
     }
 
-    let delay = Math.max(0, (data.flowSegmentData.freeFlowSpeed || 0) - (data.flowSegmentData.currentSpeed || 0));
+    let delay = Math.max(0,
+      (data.flowSegmentData.freeFlowSpeed || 0) - (data.flowSegmentData.currentSpeed || 0)
+    );
     let traffic = delay > 20 ? "High" : delay > 10 ? "Moderate" : "Low";
     let color   = delay > 20 ? "red"  : delay > 10 ? "orange"   : "green";
 
@@ -493,7 +499,7 @@ async function getWeather(lat, lng) {
 }
 
 // =========================
-// LOAD DATA (DB TABLE)
+// LOAD DATA
 // =========================
 
 function loadData() {
@@ -526,10 +532,6 @@ function loadData() {
     .catch(err => console.log(err));
 }
 
-// =========================
-// ADD DATA
-// =========================
-
 function addData() {
   let speed    = document.getElementById("newSpeed").value;
   let distance = document.getElementById("newDistance").value;
@@ -545,19 +547,11 @@ function addData() {
     .then(data => { alert(data.message || "Data Added"); loadData(); });
 }
 
-// =========================
-// DELETE DATA
-// =========================
-
 function deleteData(id) {
   fetch(`${API_BASE}/delete/${id}`, { method: "DELETE" })
     .then(res => res.json())
     .then(data => { alert(data.message || "Deleted"); loadData(); });
 }
-
-// =========================
-// SEARCH TABLE
-// =========================
 
 function searchTable() {
   let input = document.getElementById("searchInput");
@@ -573,10 +567,6 @@ function searchTable() {
   }
 }
 
-// =========================
-// ANALYTICS CHART
-// =========================
-
 function drawAnalytics(data) {
   const canvas = document.getElementById("analyticsChart");
   if (!canvas) return;
@@ -589,10 +579,6 @@ function drawAnalytics(data) {
     }
   });
 }
-
-// =========================
-// DECISION PIE CHART
-// =========================
 
 function drawDecisionChart(brakeCount, accelCount) {
   const canvas = document.getElementById("decisionChart");
@@ -634,18 +620,14 @@ function askAI() {
     .then(data => {
       document.getElementById("aiResponse").innerText = data.response || "No Response";
     })
-    .catch(err => {
+    .catch(() => {
       document.getElementById("aiResponse").innerText = "AI Server Error";
     });
 }
 
-// =========================
-// VOICE COMMAND
-// =========================
-
 function startVoice() {
   if (!("webkitSpeechRecognition" in window)) {
-    alert("Voice recognition not supported in this browser"); return;
+    alert("Voice recognition not supported"); return;
   }
 
   const recognition = new webkitSpeechRecognition();
@@ -654,7 +636,7 @@ function startVoice() {
   recognition.interimResults = false;
   recognition.start();
 
-  document.getElementById("aiResponse").innerText = "🎤 Listening... Speak now";
+  document.getElementById("aiResponse").innerText = "🎤 Listening...";
 
   recognition.onresult = function (event) {
     let text = event.results[0][0].transcript;
@@ -673,10 +655,6 @@ function startVoice() {
   };
 }
 
-// =========================
-// TEXT-TO-SPEECH
-// =========================
-
 function speak(text) {
   let mode = document.getElementById("voiceMode").value;
   if (mode === "none") return;
@@ -691,10 +669,6 @@ function speak(text) {
   speechSynthesis.speak(speech);
 }
 
-// =========================
-// LOGOUT
-// =========================
-
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
@@ -703,35 +677,61 @@ function logout() {
 // =========================
 // CAMERA START
 // =========================
+
 async function startCamera() {
   try {
     try {
       roadStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }, audio: false
+        video: { facingMode: { ideal: "environment" }, width: 640, height: 480 },
+        audio: false
       });
-      document.getElementById("roadCam").srcObject = roadStream;
+      const roadCam = document.getElementById("roadCam");
+      roadCam.srcObject = roadStream;
+      await roadCam.play();
     } catch (e) { console.log("Back camera unavailable:", e); }
 
     try {
       driverStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "user" } }, audio: false
+        video: { facingMode: "user", width: 320, height: 240 },
+        audio: false
       });
-      document.getElementById("driverCam").srcObject = driverStream;
+      const driverCam = document.getElementById("driverCam");
+      driverCam.srcObject = driverStream;
+      await driverCam.play();
     } catch (e) { console.log("Front camera unavailable:", e); }
 
     if (roadStream || driverStream) {
-      // Start dashcam immediately
       startDashcam();
       detectionRunning = true;
 
-      // Load face models in background
       if (driverStream) {
-        loadFaceModels().then(() => {
-          startEyeDetection();
-          startEmotionDetection();
-        }).catch(e => console.log("Face models failed:", e));
+        // Wait for video to be ready before loading models
+        const driverCam = document.getElementById("driverCam");
+        driverCam.onloadeddata = async () => {
+          console.log("Driver cam ready, loading face models...");
+          // Create offscreen canvas for face detection
+          // FIX: on mobile, face-api can't read directly from <video>
+          // We draw video frames to a canvas every 300ms and run detection on that
+          faceCanvas = document.createElement("canvas");
+          faceCanvas.width  = 320;
+          faceCanvas.height = 240;
+          faceCtx = faceCanvas.getContext("2d");
 
-        loadObjects().catch(e => console.log("Object detection failed:", e));
+          try {
+            await loadFaceModels();
+            console.log("Face models ready ✅");
+            startEyeDetection();
+            startEmotionDetection();
+          } catch (e) {
+            console.log("Face model load failed:", e);
+          }
+
+          try {
+            await loadObjects();
+          } catch (e) {
+            console.log("Object detection failed:", e);
+          }
+        };
       }
     } else {
       alert("No camera available");
@@ -746,12 +746,25 @@ async function startCamera() {
 // =========================
 
 async function loadFaceModels() {
+  const MODEL_URL = "https://justadudewhohacks.github.io/face-api.js/models";
   await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri("https://justadudewhohacks.github.io/face-api.js/models"),
-    faceapi.nets.faceLandmark68Net.loadFromUri("https://justadudewhohacks.github.io/face-api.js/models"),
-    faceapi.nets.faceExpressionNet.loadFromUri("https://justadudewhohacks.github.io/face-api.js/models")
+    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+    faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
   ]);
-  console.log("Face Models Loaded");
+}
+
+// =========================
+// DRAW VIDEO TO CANVAS
+// FIX: mobile browsers won't let face-api read <video> directly
+// We snapshot the video into a canvas every interval and detect on that
+// =========================
+
+function drawFrameToCanvas() {
+  const cam = document.getElementById("driverCam");
+  if (!cam || !faceCtx || cam.readyState < 2) return false;
+  faceCtx.drawImage(cam, 0, 0, faceCanvas.width, faceCanvas.height);
+  return true;
 }
 
 // =========================
@@ -770,72 +783,156 @@ function eyeAspectRatio(eye) {
 }
 
 // =========================
-// EYE / DROWSINESS DETECTION
+// EYE / DROWSINESS DETECTION  ← FIXED FOR MOBILE
 // =========================
 
 function startEyeDetection() {
   setInterval(async () => {
-    let cam = document.getElementById("driverCam");
-    if (!cam || !cam.srcObject) return;
+    if (!faceCanvas) return;
+    if (!drawFrameToCanvas()) return;  // draw video → canvas first
 
-    const detection = await faceapi
-      .detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks();
+    try {
+      const detection = await faceapi
+        .detectSingleFace(faceCanvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
+        .withFaceLandmarks();
 
-    if (!detection) { eyeClosedStart = null; return; }
-
-    let avgEAR = (
-      eyeAspectRatio(detection.landmarks.getLeftEye()) +
-      eyeAspectRatio(detection.landmarks.getRightEye())
-    ) / 2;
-
-    if (avgEAR < 0.27) {
-      if (!eyeClosedStart) eyeClosedStart = Date.now();
-      if (Date.now() - eyeClosedStart > 5000 && !drowsyTriggered) {
-        document.getElementById("drowsyAlert").style.display = "block";
-        document.getElementById("alarm").play();
-        speak("Driver is drowsy");
-        drowsyTriggered = true;
+      if (!detection) {
+        eyeClosedStart = null;
+        return;
       }
-    } else {
-      eyeClosedStart = null;
-      drowsyTriggered = false;
-      document.getElementById("drowsyAlert").style.display = "none";
-      let alarm = document.getElementById("alarm");
-      if (alarm) { alarm.pause(); alarm.currentTime = 0; }
+
+      let avgEAR = (
+        eyeAspectRatio(detection.landmarks.getLeftEye()) +
+        eyeAspectRatio(detection.landmarks.getRightEye())
+      ) / 2;
+
+      console.log("EAR:", avgEAR.toFixed(3)); // debug — remove later
+
+      if (avgEAR < 0.27) {
+        // Eyes closed
+        if (!eyeClosedStart) eyeClosedStart = Date.now();
+
+        const closedFor = Date.now() - eyeClosedStart;
+
+        if (closedFor > 2000 && !drowsyTriggered) {
+          // Reduced from 5s to 2s for better response
+          drowsyTriggered = true;
+          document.getElementById("drowsyAlert").style.display = "block";
+
+          // FIX: on mobile, audio needs user interaction first
+          // We use Web Audio API oscillator as fallback alarm
+          playAlarm();
+
+          // Text to speech
+          if ("speechSynthesis" in window) {
+            const msg = new SpeechSynthesisUtterance("Warning! Driver drowsy. Please stop.");
+            msg.volume = 1;
+            msg.rate   = 1;
+            window.speechSynthesis.speak(msg);
+          }
+        }
+      } else {
+        // Eyes open
+        eyeClosedStart  = null;
+        drowsyTriggered = false;
+        document.getElementById("drowsyAlert").style.display = "none";
+        stopAlarm();
+      }
+    } catch (e) {
+      console.log("Eye detection error:", e);
     }
   }, 300);
 }
 
 // =========================
-// EMOTION DETECTION
+// WEB AUDIO ALARM
+// FIX: <audio> tag often blocked on mobile without user gesture
+// Web Audio API works without prior interaction
+// =========================
+
+let audioCtx = null;
+let alarmOscillator = null;
+
+function playAlarm() {
+  try {
+    if (alarmOscillator) return; // already playing
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    alarmOscillator = audioCtx.createOscillator();
+    const gainNode  = audioCtx.createGain();
+
+    alarmOscillator.type      = "square";
+    alarmOscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz alarm tone
+
+    gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+
+    alarmOscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    alarmOscillator.start();
+
+    console.log("🔔 Alarm playing");
+  } catch (e) {
+    console.log("Alarm error:", e);
+    // Fallback to HTML audio
+    const alarm = document.getElementById("alarm");
+    if (alarm) alarm.play().catch(() => {});
+  }
+}
+
+function stopAlarm() {
+  try {
+    if (alarmOscillator) {
+      alarmOscillator.stop();
+      alarmOscillator.disconnect();
+      alarmOscillator = null;
+    }
+    if (audioCtx) {
+      audioCtx.close();
+      audioCtx = null;
+    }
+  } catch (e) {}
+
+  const alarm = document.getElementById("alarm");
+  if (alarm) { alarm.pause(); alarm.currentTime = 0; }
+}
+
+// =========================
+// EMOTION DETECTION  ← FIXED FOR MOBILE
 // =========================
 
 function startEmotionDetection() {
   setInterval(async () => {
-    let cam = document.getElementById("driverCam");
-    if (!cam || cam.readyState !== 4) return;
+    if (!faceCanvas) return;
+    if (!drawFrameToCanvas()) return; // draw video → canvas first
 
     try {
       const result = await faceapi
-        .detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(faceCanvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
         .withFaceLandmarks()
         .withFaceExpressions();
 
-      if (!result) { document.getElementById("emotion").innerText = "Emotion: No Face"; return; }
+      if (!result) {
+        document.getElementById("emotion").innerText = "Emotion: No Face";
+        return;
+      }
 
-      let expressions = result.expressions;
-      let emotion = Object.keys(expressions).reduce((a, b) =>
+      const expressions = result.expressions;
+      const emotion = Object.keys(expressions).reduce((a, b) =>
         expressions[a] > expressions[b] ? a : b
       );
-      document.getElementById("emotion").innerText = "Emotion: " + emotion;
 
-    } catch (error) { console.log("Emotion Error", error); }
+      document.getElementById("emotion").innerText = "Emotion: " + emotion;
+      console.log("Emotion detected:", emotion); // debug
+
+    } catch (e) {
+      console.log("Emotion error:", e);
+    }
   }, 2000);
 }
 
 // =========================
-// OBJECT DETECTION (COCO-SSD)
+// OBJECT DETECTION
 // =========================
 
 async function loadObjects() {
@@ -846,17 +943,130 @@ async function loadObjects() {
 }
 
 async function detectObjects() {
-  const cam = document.getElementById("driverCam");
-  if (!cam || !model || cam.readyState !== 4) return;
+  // FIX: use faceCanvas (offscreen canvas) instead of video element
+  const source = faceCanvas || document.getElementById("driverCam");
+  if (!source || !model) return;
 
-  const predictions = await model.detect(cam);
-  let names = predictions.map(p => p.class);
-  document.getElementById("objectDetect").innerText = "Objects: " + (names.join(", ") || "None");
-  document.getElementById("trafficSign").innerText  = names.includes("stop sign") ? "STOP Sign" : "None";
+  try {
+    const predictions = await model.detect(source);
+    let names = predictions.map(p => p.class);
+    document.getElementById("objectDetect").innerText = "Objects: " + (names.join(", ") || "None");
+    document.getElementById("trafficSign").innerText  = names.includes("stop sign") ? "STOP Sign" : "None";
+  } catch (e) {
+    console.log("Object detect error:", e);
+  }
 }
 
 // =========================
-// LANE DETECTION
+// INDEXEDDB
+// =========================
+
+function initDB() {
+  const request = indexedDB.open("DashcamDB", 1);
+  request.onupgradeneeded = (e) => {
+    db = e.target.result;
+    db.createObjectStore("videos", { autoIncrement: true });
+  };
+  request.onsuccess = (e) => {
+    db = e.target.result;
+  };
+}
+
+// =========================
+// DASHCAM RECORDING  ← FIXED FOR MOBILE
+// Saves video using IndexedDB + share sheet on Android
+// =========================
+
+function startDashcam() {
+  const canvas = document.createElement("canvas");
+  canvas.width  = 1280;
+  canvas.height = 720;
+  const ctx = canvas.getContext("2d");
+
+  setInterval(() => {
+    const road   = document.getElementById("roadCam");
+    const driver = document.getElementById("driverCam");
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 1280, 720);
+    if (road   && road.srcObject   && road.readyState   >= 2) ctx.drawImage(road,   0,   0, 960, 720);
+    if (driver && driver.srcObject && driver.readyState >= 2) ctx.drawImage(driver, 980,  20, 280, 180);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 18px Arial";
+    ctx.fillText("🚗 Fleet AI  |  " + new Date().toLocaleString(), 16, 28);
+  }, 100);
+
+  const stream   = canvas.captureStream(30);
+  const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp8")
+    ? "video/webm;codecs=vp8"
+    : "video/webm";
+
+  recorder = new MediaRecorder(stream, { mimeType });
+  chunks   = [];
+
+  recorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+
+  recorder.onstop = async () => {
+    if (chunks.length === 0) {
+      alert("No video data recorded.");
+      stopCameras();
+      return;
+    }
+
+    const blob = new Blob(chunks, { type: "video/webm" });
+    chunks = [];
+    console.log("Video blob:", blob.size, "bytes");
+
+    // FIX: On Android, use Web Share API to save to Gallery
+    // This opens the native share/save dialog
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], "dashcam.webm", { type: "video/webm" })] })) {
+      try {
+        const file = new File([blob], "dashcam_" + Date.now() + ".webm", { type: "video/webm" });
+        await navigator.share({
+          files: [file],
+          title: "Fleet AI Dashcam",
+          text: "Dashcam recording from Fleet AI"
+        });
+        console.log("Shared successfully ✅");
+      } catch (e) {
+        console.log("Share cancelled or failed:", e);
+        // Fallback to download link
+        triggerDownload(blob);
+      }
+    } else {
+      // Fallback for desktop or unsupported browsers
+      triggerDownload(blob);
+    }
+
+    stopCameras();
+  };
+
+  // Collect data every second
+  recorder.start(1000);
+  console.log("Dashcam recording started ✅");
+}
+
+// =========================
+// TRIGGER DOWNLOAD (fallback)
+// =========================
+
+function triggerDownload(blob) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement("a");
+  a.href    = url;
+  a.download = "dashcam_" + Date.now() + ".webm";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 3000);
+}
+
+// =========================
+// LANE + ROAD (server)
 // =========================
 
 async function detectLane() {
@@ -872,10 +1082,6 @@ async function detectLane() {
   });
 }
 
-// =========================
-// ROAD SEGMENTATION
-// =========================
-
 async function detectRoad() {
   const cam = document.getElementById("driverCam");
   if (!cam) return;
@@ -887,76 +1093,4 @@ async function detectRoad() {
     const data = await (await fetch(`${API_BASE}/road_segment`, { method: "POST", body: form })).json();
     document.getElementById("roadStatus").innerText = "Road: " + data.road;
   });
-}
-
-// =========================
-// INDEXEDDB INIT
-// =========================
-
-function initDB() {
-  const request = indexedDB.open("DashcamDB", 1);
-  request.onupgradeneeded = (e) => {
-    db = e.target.result;
-    db.createObjectStore("videos", { autoIncrement: true });
-  };
-  request.onsuccess = (e) => {
-    db = e.target.result;
-    console.log("Dashcam Storage Ready");
-  };
-}
-
-// =========================
-// DASHCAM RECORDING
-// Where does it save?
-// → When stopTrip() is called, recorder.stop() fires.
-// → The onstop handler below creates a .webm file and
-//   triggers an automatic browser DOWNLOAD to your
-//   Downloads folder, named dashcam_<timestamp>.webm
-// =========================
-function startDashcam() {
-  const canvas = document.createElement("canvas");
-  canvas.width  = 1280;
-  canvas.height = 720;
-  const ctx = canvas.getContext("2d");
-
-  setInterval(() => {
-    const road   = document.getElementById("roadCam");
-    const driver = document.getElementById("driverCam");
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, 1280, 720);
-    if (road   && road.srcObject)   ctx.drawImage(road,   0,   0, 960, 720);
-    if (driver && driver.srcObject) ctx.drawImage(driver, 980,  20, 280, 180);
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText(new Date().toLocaleString(), 20, 30);
-  }, 100);
-
-  const stream = canvas.captureStream(30);
-
-  let mimeType = "video/webm;codecs=vp8";
-  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm";
-
-  recorder = new MediaRecorder(stream, { mimeType });
-  chunks = [];
-
-  recorder.ondataavailable = (e) => {
-    if (e.data && e.data.size > 0) chunks.push(e.data);
-  };
-
-  recorder.onstop = () => {
-    if (chunks.length === 0) return;
-    const blob = new Blob(chunks, { type: "video/webm" });
-    chunks = [];
-    const url = URL.createObjectURL(blob);
-    const a   = document.createElement("a");
-    a.href    = url;
-    a.download = "dashcam_" + Date.now() + ".webm";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Request data every second for short trips
-  recorder.start(1000);
 }
