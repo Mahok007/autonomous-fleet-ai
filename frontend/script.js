@@ -178,7 +178,6 @@ function updateSafetyScore() {
 // =========================
 // FIND ROUTE
 // =========================
-
 async function findRoute() {
   try {
     let start = document.getElementById("startLocation").value.trim();
@@ -218,13 +217,25 @@ async function findRoute() {
     routingControl = L.Routing.control({
       waypoints: [L.latLng(startLat, startLng), L.latLng(endLat, endLng)],
       routeWhileDragging: false,
+      show: false,
+      collapsible: true,
       lineOptions: {
         styles: [
           { color: "#00ffff", weight: 10, opacity: 0.9 },
           { color: "#38bdf8", weight: 5 }
         ]
-      }
+      },
+      router: L.Routing.osrmv1({
+        serviceUrl: "https://router.project-osrm.org/route/v1",
+        language: "en"
+      })
     }).addTo(map);
+
+    // Hide direction panel
+    setTimeout(() => {
+      let panel = document.querySelector(".leaflet-routing-container");
+      if (panel) panel.style.display = "none";
+    }, 1000);
 
     routeInstructions = [];
     routingControl.on("routesfound", function (e) {
@@ -692,7 +703,6 @@ function logout() {
 // =========================
 // CAMERA START
 // =========================
-
 async function startCamera() {
   try {
     try {
@@ -710,18 +720,25 @@ async function startCamera() {
     } catch (e) { console.log("Front camera unavailable:", e); }
 
     if (roadStream || driverStream) {
-      await loadFaceModels();
-      await loadObjects();
-      setTimeout(() => {
-        if (!detectionRunning) {
-          if (driverStream) { startEyeDetection(); startEmotionDetection(); }
-          startDashcam();
-          detectionRunning = true;
-        }
-      }, 3000);
-    }
+      // Start dashcam immediately
+      startDashcam();
+      detectionRunning = true;
 
-  } catch (error) { console.log("Camera error:", error); }
+      // Load face models in background
+      if (driverStream) {
+        loadFaceModels().then(() => {
+          startEyeDetection();
+          startEmotionDetection();
+        }).catch(e => console.log("Face models failed:", e));
+
+        loadObjects().catch(e => console.log("Object detection failed:", e));
+      }
+    } else {
+      alert("No camera available");
+    }
+  } catch (error) {
+    console.log("Camera error:", error);
+  }
 }
 
 // =========================
@@ -896,14 +913,12 @@ function initDB() {
 //   triggers an automatic browser DOWNLOAD to your
 //   Downloads folder, named dashcam_<timestamp>.webm
 // =========================
-
 function startDashcam() {
   const canvas = document.createElement("canvas");
   canvas.width  = 1280;
   canvas.height = 720;
   const ctx = canvas.getContext("2d");
 
-  // Composite road + driver cameras onto one canvas every 100ms
   setInterval(() => {
     const road   = document.getElementById("roadCam");
     const driver = document.getElementById("driverCam");
@@ -916,33 +931,32 @@ function startDashcam() {
     ctx.fillText(new Date().toLocaleString(), 20, 30);
   }, 100);
 
-  // Capture canvas as a video stream
   const stream = canvas.captureStream(30);
 
-  // Use MediaRecorder to encode as WebM
-  recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8" });
+  let mimeType = "video/webm;codecs=vp8";
+  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm";
+
+  recorder = new MediaRecorder(stream, { mimeType });
   chunks = [];
 
   recorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
+    if (e.data && e.data.size > 0) chunks.push(e.data);
   };
 
-  // When stopTrip() calls recorder.stop(), this fires:
-  // → creates a .webm Blob and downloads it to your Downloads folder
   recorder.onstop = () => {
+    if (chunks.length === 0) return;
     const blob = new Blob(chunks, { type: "video/webm" });
     chunks = [];
-
-    const url      = URL.createObjectURL(blob);
-    const a        = document.createElement("a");
-    a.href         = url;
-    a.download     = "dashcam_" + Date.now() + ".webm";
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href    = url;
+    a.download = "dashcam_" + Date.now() + ".webm";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  // Start recording immediately
-  recorder.start();
+  // Request data every second for short trips
+  recorder.start(1000);
 }

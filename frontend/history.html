@@ -1,145 +1,78 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <title>Trip History</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 <style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Poppins;
-
-padding:20px;
-
-}
-
-.card{
-
-background:#1e293b;
-
-padding:20px;
-
-border-radius:15px;
-
-margin-bottom:20px;
-
-}
-
+body { background:#0f172a; color:white; font-family:Poppins; padding:20px; }
+.card { background:#1e293b; padding:20px; border-radius:15px; margin-bottom:20px; }
+h1 { color:#60a5fa; }
+h2 { color:#60a5fa; margin:0 0 10px 0; }
+p  { margin:5px 0; color:#94a3b8; }
+.btn { width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:Poppins; }
+.btn-replay { background:#2563eb; color:white; }
+.btn-delete { background:#ef4444; color:white; }
+.btn-clear  { background:#7c3aed; color:white; width:100%; padding:12px; border:none; border-radius:8px; cursor:pointer; font-size:15px; margin-bottom:20px; font-family:Poppins; }
+.empty { color:#64748b; text-align:center; margin-top:40px; font-size:18px; }
 </style>
-
 </head>
-
 <body>
 
-<h1>
-📜 Trip History
-</h1>
-
-<div id="history">
-
-</div>
+<h1>📜 Trip History</h1>
+<button class="btn-clear" onclick="clearAll()">🗑 Delete All Trips</button>
+<div id="history"></div>
 
 <script>
+function renderTrips() {
+  let trips = JSON.parse(localStorage.getItem("tripHistory")) || [];
+  let html = "";
 
-let trips=
+  if (trips.length === 0) {
+    html = "<div class='empty'>No trips recorded yet.</div>";
+  }
 
-JSON.parse(
+  trips.forEach((trip, index) => {
+    if (!trip || trip.length === 0) return;
+    let speeds = trip.map(t => t.speed || 0);
+    let maxSpeed = Math.max(...speeds);
+    let avg = speeds.reduce((a, b) => a + b, 0) / speeds.length;
 
-localStorage.getItem(
-"tripHistory"
-)
+    html += `
+    <div class="card">
+      <h2>Trip ${index + 1}</h2>
+      <p>📅 Date: ${trip[0]?.time || "No data"}</p>
+      <p>📍 Points: ${trip.length}</p>
+      <p>🚀 Max Speed: ${maxSpeed} km/h</p>
+      <p>📊 Avg Speed: ${avg.toFixed(1)} km/h</p>
+      <button class="btn btn-replay" onclick="replay(${index})">▶ Replay</button>
+      <button class="btn btn-delete" onclick="deleteTrip(${index})">🗑 Delete</button>
+    </div>`;
+  });
 
-)||[];
-
-
-let html="";
-
-trips.forEach(
-
-(trip,index)=>{
-
-let maxSpeed=
-Math.max(
-...trip.map(
-t=>t.speed
-)
-);
-
-let avg=
-trip.reduce(
-(a,b)=>a+b.speed,
-0
-)/trip.length;
-
-html+=`
-
-<div class="card">
-
-<h2>
-Trip ${index+1}
-</h2>
-
-<p>
-Date:
-${trip[0]?.time || "No data"}
-</p>
-
-<p>
-Max Speed:
-${maxSpeed}
-km/h
-</p>
-
-<p>
-Average Speed:
-${avg.toFixed(1)}
-km/h
-</p>
-
-<button
-onclick="replay(${index})"
->
-
-Replay
-
-</button>
-
-</div>
-
-`;
-
+  document.getElementById("history").innerHTML = html;
 }
 
-);
-
-document.getElementById(
-"history"
-).innerHTML=
-html;
-
-
-function replay(i){
-
-localStorage.setItem(
-"selectedTrip",
-JSON.stringify(
-trips[i]
-)
-);
-
-window.location.href=
-"replay.html";
-
+function deleteTrip(index) {
+  if (!confirm("Delete this trip?")) return;
+  let trips = JSON.parse(localStorage.getItem("tripHistory")) || [];
+  trips.splice(index, 1);
+  localStorage.setItem("tripHistory", JSON.stringify(trips));
+  renderTrips();
 }
 
+function clearAll() {
+  if (!confirm("Delete ALL trip history?")) return;
+  localStorage.removeItem("tripHistory");
+  renderTrips();
+}
+
+function replay(i) {
+  let trips = JSON.parse(localStorage.getItem("tripHistory")) || [];
+  localStorage.setItem("selectedTrip", JSON.stringify(trips[i]));
+  window.location.href = "replay.html";
+}
+
+renderTrips();
 </script>
-
 </body>
-
 </html>
